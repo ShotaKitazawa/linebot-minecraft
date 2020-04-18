@@ -37,37 +37,46 @@ func NewHandler(config Config) (*httphandler.WebhookHandler, error) {
 		for _, event := range events {
 			switch event.Type {
 			case linebot.EventTypeMessage:
-
-				switch message := event.Message.(type) {
+				switch event.Message.(type) {
 				case *linebot.TextMessage:
-					input := &botplug.MessageInput{
-						Timestamp: event.Timestamp,
-						Source: &botplug.Source{
-							Type:    string(event.Source.Type),
-							UserID:  event.Source.UserID,
-							GroupID: event.Source.GroupID,
-						},
-						Messages: strings.Split(message.Text, " "),
-					}
-
-					output := config.Plugin.RecieveMessage(input)
-
-					for _, element := range output.Queue {
-						switch typedElement := element.(type) {
-						case string:
-							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement)).Do(); err != nil {
-								log.Print(err)
-							}
-						case []linebot.SendingMessage:
-							_, err = bot.PushMessage(config.GroupID, typedElement...).Do()
-							if err != nil {
-								log.Print(err)
-							}
-						}
+					if err = RecieveTextMessage(event, bot, config); err != nil {
+						log.Print(err)
 					}
 				}
 			}
 		}
 	})
 	return handler, nil
+}
+
+func RecieveTextMessage(event *linebot.Event, bot *linebot.Client, config Config) (err error) {
+	message := event.Message.(*linebot.TextMessage)
+	input := &botplug.MessageInput{
+		Timestamp: event.Timestamp,
+		Source: &botplug.Source{
+			Type:    string(event.Source.Type),
+			UserID:  event.Source.UserID,
+			GroupID: event.Source.GroupID,
+		},
+		Messages: strings.Split(message.Text, " "),
+	}
+
+	// execute user function
+	output := config.Plugin.RecieveMessage(input)
+
+	// proceed contents in queue
+	for _, element := range output.Queue {
+		switch typedElement := element.(type) {
+		case string:
+			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement)).Do(); err != nil {
+				return
+			}
+		case []linebot.SendingMessage:
+			_, err = bot.PushMessage(config.GroupID, typedElement...).Do()
+			if err != nil {
+				return
+			}
+		}
+	}
+	return nil
 }
