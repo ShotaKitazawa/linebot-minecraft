@@ -1,3 +1,9 @@
+# [WIP] Architecture
+
+![](./images/architecture.png)
+
+# Execute
+
 ```
 export CHANNEL_SECRET=XXX
 export CHANNEL_TOKEN=XXX
