@@ -1,10 +1,9 @@
 package bot
 
 import (
+	"github.com/ShotaKitazawa/botplug"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/sirupsen/logrus"
-
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 )
 
 type Plugin struct {

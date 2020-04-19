@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/sirupsen/logrus"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
+	"github.com/ShotaKitazawa/botplug/line"
 )
 
 var logger = logrus.New()
