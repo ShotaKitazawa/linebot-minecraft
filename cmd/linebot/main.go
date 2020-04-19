@@ -5,39 +5,28 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/sirupsen/logrus"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
-	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-type Plugin struct{}
+var logger = logrus.New()
 
-func (p Plugin) RecieveMessage(input *botplug.MessageInput) (output *botplug.MessageOutput) {
-	var queue []interface{}
-
-	// test
-	queue = append(queue, "test")
-	leftBtn := linebot.NewMessageAction("left", "left clicked")
-	rightBtn := linebot.NewMessageAction("right", "right clicked")
-	template := linebot.NewConfirmTemplate("Hello World", leftBtn, rightBtn)
-	message := linebot.NewTemplateMessage("Sorry :(, please update your app.", template)
-	var messages []linebot.SendingMessage
-	messages = append(messages, message)
-	queue = append(queue, messages)
-
-	return &botplug.MessageOutput{Queue: queue}
+func init() {
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetOutput(os.Stdout)
+	logger.SetLevel(logrus.DebugLevel)
 }
 
 func main() {
-	plugin := Plugin{}
 	conf := line.Config{
 		GroupID:       os.Getenv("GROUP_ID"),
 		ChannelSecret: os.Getenv("CHANNEL_SECRET"),
 		ChannelToken:  os.Getenv("CHANNEL_TOKEN"),
-		Plugin:        plugin,
+		Plugin:        bot.Plugin{Logger: logger},
 	}
 
-	// /callback にエンドポイントの定義
 	handler, err := line.NewHandler(conf)
 	if err != nil {
 		panic(err)

@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 )
 
 type Config struct {
@@ -39,7 +40,7 @@ func NewHandler(config Config) (*httphandler.WebhookHandler, error) {
 			case linebot.EventTypeMessage:
 				switch event.Message.(type) {
 				case *linebot.TextMessage:
-					if err = RecieveTextMessage(event, bot, config); err != nil {
+					if err = ReceiveTextMessage(event, bot, config); err != nil {
 						log.Print(err)
 					}
 				}
@@ -49,7 +50,7 @@ func NewHandler(config Config) (*httphandler.WebhookHandler, error) {
 	return handler, nil
 }
 
-func RecieveTextMessage(event *linebot.Event, bot *linebot.Client, config Config) (err error) {
+func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config Config) (err error) {
 	message := event.Message.(*linebot.TextMessage)
 	input := &botplug.MessageInput{
 		Timestamp: event.Timestamp,
@@ -62,7 +63,7 @@ func RecieveTextMessage(event *linebot.Event, bot *linebot.Client, config Config
 	}
 
 	// execute user function
-	output := config.Plugin.RecieveMessage(input)
+	output := config.Plugin.ReceiveMessage(input)
 
 	// proceed contents in queue
 	for _, element := range output.Queue {
