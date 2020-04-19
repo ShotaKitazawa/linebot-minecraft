@@ -14,8 +14,7 @@ type SharedMem struct {
 	sendStream chan<- domain.Domain
 	// TODO : receiveChannel -> receiveChannels
 	receiveStream <-chan domain.Domain
-	// TODO typed: interface{} -> []domain.XXX{}
-	data interface{}
+	data          *domain.Domain
 }
 
 func New() *SharedMem {
@@ -27,11 +26,9 @@ func New() *SharedMem {
 	return m
 }
 
-// TODO typed: interface{} -> domain.XXX{}
-func (m *SharedMem) ReadSharedMem() (interface{}, error) {
-	var result interface{}
+func (m *SharedMem) ReadSharedMem() (*domain.Domain, error) {
 	mu.Lock()
-	result = m.data
+	result := m.data
 	mu.Unlock()
 	if result == nil {
 		return nil, fmt.Errorf("no such data")
@@ -49,7 +46,7 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 		select {
 		case d := <-m.receiveStream:
 			mu.Lock()
-			m.data = d
+			m.data = &d
 			mu.Unlock()
 		}
 	}

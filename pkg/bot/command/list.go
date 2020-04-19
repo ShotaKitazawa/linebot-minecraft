@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
@@ -35,15 +34,9 @@ func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.Message
 		return &botplug.MessageOutput{Queue: queue}
 	}
 
-	// assertion to domain.Domain
-	domainData, ok := data.(domain.Domain)
-	if !ok {
-		p.Logger.Warn(fmt.Errorf("data cannot assertion to domain.Domain"))
-	}
-
 	// ログイン中のユーザを LINE に送信
 	var loginUsernames []string
-	for _, user := range domainData.LoginUsers {
+	for _, user := range data.LoginUsers {
 		loginUsernames = append(loginUsernames, user.Name)
 	}
 	queue = append(queue, fmt.Sprintf("ログイン中のユーザ: %s", loginUsernames))
