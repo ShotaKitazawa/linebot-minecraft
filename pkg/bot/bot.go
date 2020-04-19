@@ -1,31 +1,32 @@
 package bot
 
 import (
-	"github.com/ShotaKitazawa/botplug"
-	"github.com/line/line-bot-sdk-go/linebot"
+	"strconv"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
 
 type Plugin struct {
-	Logger *logrus.Logger
+	Logger    *logrus.Logger
+	SharedMem *sharedmem.SharedMem
 }
 
-func (p Plugin) ReceiveMessage(input *botplug.MessageInput) (output *botplug.MessageOutput) {
+func (p *Plugin) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
 	p.Logger.WithFields(logrus.Fields{
 		"source": *input.Source,
 	}).Debug(input.Messages)
 
-	// TODO
-	queue = append(queue, "test")
-	leftBtn := linebot.NewMessageAction("left", "left clicked")
-	rightBtn := linebot.NewMessageAction("right", "right clicked")
-	template := linebot.NewConfirmTemplate("Hello World", leftBtn, rightBtn)
-	message := linebot.NewTemplateMessage("Sorry :(, please update your app.", template)
-	var messages []linebot.SendingMessage
-	messages = append(messages, message)
-	queue = append(queue, messages)
+	data, err := p.SharedMem.ReadSharedMem()
+	if err != nil {
+		queue = append(queue, "Internal Error")
+		p.Logger.Warn(err)
+		return &botplug.MessageOutput{Queue: queue}
+	}
 
+	queue = append(queue, strconv.Itoa(data.(int)))
 	return &botplug.MessageOutput{Queue: queue}
 }
