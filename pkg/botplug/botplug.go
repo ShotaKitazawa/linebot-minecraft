@@ -5,7 +5,7 @@ import (
 )
 
 type BotPlugin interface {
-	ReceiveMessage(*MessageInput) *MessageOutput
+	ReceiveMessageEntry(*MessageInput) *MessageOutput
 }
 
 type MessageInput struct {

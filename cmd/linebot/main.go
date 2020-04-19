@@ -1,15 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/namsral/flag"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
@@ -21,21 +24,64 @@ func init() {
 	logger.SetLevel(logrus.DebugLevel)
 }
 
+type argsConfig struct {
+	channelSecret string
+	channelToken  string
+	groupID       string
+	rconHost      string
+	rconPort      int
+	rconPassword  string
+}
+
+func newArgsConfig() *argsConfig {
+	cfg := &argsConfig{}
+
+	fl := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "")
+	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "")
+	fl.StringVar(&cfg.groupID, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
+	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
+	fl.IntVar(&cfg.rconPort, "rcon-port", 25575, "RCON Port")
+	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
+	fl.Parse(os.Args[1:])
+
+	if cfg.channelSecret == "" ||
+		cfg.channelToken == "" ||
+		cfg.groupID == "" ||
+		cfg.rconHost == "" ||
+		cfg.rconPort == 0 ||
+		cfg.rconPassword == "" {
+		fmt.Println("not enough required fields")
+		os.Exit(2)
+	}
+
+	return cfg
+}
+
 func main() {
 	var err error
 
+	// initialize
+	args := newArgsConfig()
 	m := sharedmem.New()
-	plugin := &bot.Plugin{Logger: logger, SharedMem: m}
-	conf := &line.Config{
-		GroupID:       os.Getenv("GROUP_ID"),
-		ChannelSecret: os.Getenv("CHANNEL_SECRET"),
-		ChannelToken:  os.Getenv("CHANNEL_TOKEN"),
-		Plugin:        plugin,
+	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
+	if err != nil {
+		panic(err)
 	}
-	eventer := eventer.New(m)
+	eventer := eventer.New(args.groupID, args.channelSecret, args.channelToken, m, rcon, logger)
+
+	// run eventer
 	go eventer.Run()
 
-	handler, err := line.NewHandler(conf)
+	// TODO: run exporter
+
+	// run bot
+	handler, err := line.NewHandler(&line.Config{
+		GroupID:       args.groupID,
+		ChannelSecret: args.channelSecret,
+		ChannelToken:  args.channelToken,
+		Plugin:        bot.New(m, rcon, logger),
+	})
 	if err != nil {
 		panic(err)
 	}

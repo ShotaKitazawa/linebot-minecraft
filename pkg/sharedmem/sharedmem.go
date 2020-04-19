@@ -3,21 +3,23 @@ package sharedmem
 import (
 	"fmt"
 	"sync"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 )
 
 var mu sync.Mutex
 
 type SharedMem struct {
 	// TODO : sendChannel -> sendChannels
-	sendStream chan<- interface{}
+	sendStream chan<- domain.Domain
 	// TODO : receiveChannel -> receiveChannels
-	receiveStream <-chan interface{}
+	receiveStream <-chan domain.Domain
 	// TODO typed: interface{} -> []domain.XXX{}
 	data interface{}
 }
 
 func New() *SharedMem {
-	stream := make(chan interface{})
+	stream := make(chan domain.Domain)
 	m := new(SharedMem)
 	m.sendStream = stream
 	m.receiveStream = stream
@@ -37,7 +39,7 @@ func (m *SharedMem) ReadSharedMem() (interface{}, error) {
 	return result, nil
 }
 
-func (m *SharedMem) SendToChannel(data interface{}) error {
+func (m *SharedMem) SendToChannel(data domain.Domain) error {
 	m.sendStream <- data
 	return nil
 }

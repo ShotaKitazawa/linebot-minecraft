@@ -63,7 +63,7 @@ func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config *Confi
 	}
 
 	// execute user function
-	output := config.Plugin.ReceiveMessage(input)
+	output := config.Plugin.ReceiveMessageEntry(input)
 
 	if output == nil {
 		return

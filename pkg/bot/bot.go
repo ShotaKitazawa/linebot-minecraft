@@ -1,32 +1,55 @@
 package bot
 
 import (
-	"strconv"
+	"strings"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot/command"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
-type Plugin struct {
-	Logger    *logrus.Logger
+type PluginConfig struct {
 	SharedMem *sharedmem.SharedMem
+	Rcon      *rcon.Client
+	Logger    *logrus.Logger
+	Plugins   []PluginInterface
 }
 
-func (p *Plugin) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
+func New(m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
+	return &PluginConfig{
+		SharedMem: m,
+		Rcon:      rcon,
+		Logger:    logger,
+		Plugins: []PluginInterface{
+			command.PluginList{
+				SharedMem: m,
+				Rcon:      rcon,
+				Logger:    logger,
+			},
+		},
+	}
+}
+
+func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	p.Logger.WithFields(logrus.Fields{
+	if !strings.HasPrefix(input.Messages[0], "/") {
+		return nil
+	}
+
+	pc.Logger.WithFields(logrus.Fields{
 		"source": *input.Source,
 	}).Debug(input.Messages)
 
-	data, err := p.SharedMem.ReadSharedMem()
-	if err != nil {
-		queue = append(queue, "Internal Error")
-		p.Logger.Warn(err)
-		return &botplug.MessageOutput{Queue: queue}
+	for _, plugin := range pc.Plugins {
+		if input.Messages[0] == plugin.CommandName() {
+			return plugin.ReceiveMessage(input)
+		}
 	}
 
-	queue = append(queue, strconv.Itoa(data.(int)))
+	queue = append(queue, `no such command`)
 	return &botplug.MessageOutput{Queue: queue}
 }
