@@ -36,7 +36,6 @@ steps:
   image: plugins/docker
   settings:
     repo: docker.io/kanatakita/linebot-minecraft
-    tags: latest
     dockerfile: ./Dockerfile
     username:
       from_secret: docker-username
