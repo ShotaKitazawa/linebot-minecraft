@@ -1,11 +1,11 @@
-project_name: git-bump
+project_name: linebot-minecraft
 env:
   - GO111MODULE=on
 before:
   hooks:
     - go mod tidy
 builds:
-  - main: .
+  - main: cmd/linebot/main.go
     binary: linebot-minecraft
     ldflags:
       - -s -w
