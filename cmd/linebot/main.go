@@ -16,6 +16,12 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
+var (
+	// These variables are set in build step
+	Version  = "unset"
+	Revision = "unset"
+)
+
 var logger = logrus.New()
 
 func init() {
@@ -43,7 +49,14 @@ func newArgsConfig() *argsConfig {
 	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
 	fl.IntVar(&cfg.rconPort, "rcon-port", 25575, "RCON Port")
 	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
+
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "show application version")
 	fl.Parse(os.Args[1:])
+
+	if showVersion {
+		fmt.Printf("version: %s (revision %s)", Version, Revision)
+	}
 
 	if cfg.channelSecret == "" ||
 		cfg.channelToken == "" ||
