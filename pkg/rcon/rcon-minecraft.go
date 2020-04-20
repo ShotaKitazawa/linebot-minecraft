@@ -34,8 +34,9 @@ func New(host string, port int, password string) (*Client, error) {
 }
 
 type Command struct {
-	command    string
-	expression string
+	command            string
+	expression         string
+	expressionNotFound string
 }
 
 func (c Client) command(command Command) ([]string, error) {
@@ -46,19 +47,26 @@ func (c Client) command(command Command) ([]string, error) {
 	re := regexp.MustCompile(command.expression)
 	extracted := re.FindStringSubmatch(response)
 	if len(extracted) == 0 {
-		return nil, fmt.Errorf(`"%s" is not match to "%s"`, command.expression, response)
+		re = regexp.MustCompile(command.expressionNotFound)
+		extracted = re.FindStringSubmatch(response)
+		if len(extracted) == 0 {
+			return nil, fmt.Errorf(`"%s" is not match to "%s"`, command.expression, response)
+		}
+		return nil, nil
 	}
+
 	return extracted[1:], nil
 }
 
 func (c Client) List() ([]string, error) {
 	result, err := c.command(Command{
-		command:    `list`,
-		expression: `There are [0-9].* of a max [0-9].* players online: ?(.*)$`,
+		command:            `list`,
+		expression:         `There are [0-9].* of a max [0-9].* players online: (.*)$`,
+		expressionNotFound: `There are 0 of a max [0-9].* players online:`,
 	})
 	if err != nil {
 		return nil, err
-	} else if result[0] == "" {
+	} else if result == nil {
 		return nil, nil
 	}
 	// TODO: delimiter 未確認
@@ -67,21 +75,23 @@ func (c Client) List() ([]string, error) {
 
 func (c Client) WhitelistList() ([]string, error) {
 	result, err := c.command(Command{
-		command:    `whitelist list`,
-		expression: `There are ([0-9].*) whitelisted players: ?(.*)`,
+		command:            `whitelist list`,
+		expression:         `There are [0-9].* whitelisted players: ?(.*)`,
+		expressionNotFound: `There are no whitelisted players`,
 	})
 	if err != nil {
 		return nil, err
-	} else if result[0] == "" {
+	} else if result == nil {
 		return nil, nil
 	}
-	return result, nil
+	return strings.Split(result[0], " "), nil
 }
 
 func (c Client) DataGetEntity(username string) (*User, error) {
 	array, err := c.command(Command{
-		command:    fmt.Sprintf(`data get entity %s`, username),
-		expression: fmt.Sprintf(`%s has the following entity data: {.*Health: (.*?),.*XpLevel: (.*?),.*Pos: \[(.*?)d, (.*?)d, (.*?)d\].*$`, username),
+		command:            fmt.Sprintf(`data get entity %s`, username),
+		expression:         fmt.Sprintf(`%s has the following entity data: {.*Health: (.*?),.*XpLevel: (.*?),.*Pos: \[(.*?)d, (.*?)d, (.*?)d\].*$`, username),
+		expressionNotFound: `!!!not much!!!`,
 	})
 	if err != nil {
 		return nil, err
@@ -112,14 +122,15 @@ func (c Client) DataGetEntity(username string) (*User, error) {
 
 func (c Client) Title(msg string) ([]string, error) {
 	result, err := c.command(Command{
-		command:    fmt.Sprintf(`title @a title {"test": "%s"}`, msg),
-		expression: `Showing new title for (.*)$`,
+		command:            fmt.Sprintf(`title @a title {"test": "%s"}`, msg),
+		expression:         `Showing new title for (.*)$`,
+		expressionNotFound: `No player was found`,
 	})
 	if err != nil {
-		// no user log in.
+		return nil, err
+	} else if result == nil {
 		return nil, nil
 	}
 	// TODO: delimiter 未確認
 	return strings.Split(result[0], " "), nil
-
 }
