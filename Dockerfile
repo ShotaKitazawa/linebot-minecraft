@@ -18,5 +18,5 @@ RUN apk add --no-cache ca-certificates
 ## copy binary
 COPY --from=builder /workdir/linebot-minecraft .
 ## Run
-ENTRYPOINT ["./app"]
+ENTRYPOINT ["./linebot-minecraft"]
 
