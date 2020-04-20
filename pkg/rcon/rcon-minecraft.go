@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/seeruk/minecraft-rcon/rcon"
 )
@@ -60,7 +61,8 @@ func (c Client) List() ([]string, error) {
 	} else if result[0] == "" {
 		return nil, nil
 	}
-	return result, nil
+	// TODO: delimiter 未確認
+	return strings.Split(result[0], " "), nil
 }
 
 func (c Client) WhitelistList() ([]string, error) {
@@ -106,4 +108,18 @@ func (c Client) DataGetEntity(username string) (*User, error) {
 		},
 	}
 	return user, nil
+}
+
+func (c Client) Title(msg string) ([]string, error) {
+	result, err := c.command(Command{
+		command:    fmt.Sprintf(`title @a title {"test": "%s"}`, msg),
+		expression: `Showing new title for (.*)$`,
+	})
+	if err != nil {
+		// no user log in.
+		return nil, nil
+	}
+	// TODO: delimiter 未確認
+	return strings.Split(result[0], " "), nil
+
 }
