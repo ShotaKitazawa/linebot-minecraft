@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
@@ -9,32 +10,33 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type PluginList struct {
+type PluginTitle struct {
 	SharedMem *sharedmem.SharedMem
 	Rcon      *rcon.Client
 	Logger    *logrus.Logger
 }
 
-func (p PluginList) CommandName() string {
-	return `/list`
+func (p PluginTitle) CommandName() string {
+	return `/title`
 }
 
-func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
+func (p PluginTitle) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	// read data from SharedMem
-	data, err := p.SharedMem.ReadSharedMem()
+	// send RCON
+	destUsers, err := p.Rcon.Title(strings.Join(input.Messages[1:], " "))
 	if err != nil {
 		p.Logger.Error(err)
 		queue = append(queue, "Internal Error")
 		return &botplug.MessageOutput{Queue: queue}
 	}
-
-	// ログイン中のユーザを LINE に送信
-	var loginUsernames []string
-	for _, user := range data.LoginUsers {
-		loginUsernames = append(loginUsernames, user.Name)
+	if len(destUsers) == 0 {
+		queue = append(queue, `ログイン中のユーザは存在しません`)
+		return &botplug.MessageOutput{Queue: queue}
 	}
-	queue = append(queue, fmt.Sprintf("ログイン中のユーザ: %s", loginUsernames))
+	for _, user := range destUsers {
+		queue = append(queue, fmt.Sprintf(`%s に送信しました`, user))
+	}
+
 	return &botplug.MessageOutput{Queue: queue}
 }

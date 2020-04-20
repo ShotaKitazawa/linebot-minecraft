@@ -56,11 +56,11 @@ func (e *Eventer) job() error {
 	var d domain.Domain
 
 	// get Minecraft metrics by RCON
-	loginUsersStr, err := e.rcon.List()
+	loginUsernames, err := e.rcon.List()
 	if err != nil {
 		return err
 	}
-	for _, username := range loginUsersStr {
+	for _, username := range loginUsernames {
 		userData, err := e.rcon.DataGetEntity(username)
 		if err != nil {
 			return err
