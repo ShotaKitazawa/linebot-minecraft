@@ -29,6 +29,16 @@ func New(m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *Plug
 				Rcon:      rcon,
 				Logger:    logger,
 			},
+			command.PluginTitle{
+				SharedMem: m,
+				Rcon:      rcon,
+				Logger:    logger,
+			},
+			command.PluginHelp{
+				SharedMem: m,
+				Rcon:      rcon,
+				Logger:    logger,
+			},
 		},
 	}
 }

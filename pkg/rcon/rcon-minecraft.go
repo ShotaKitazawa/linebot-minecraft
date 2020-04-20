@@ -122,7 +122,7 @@ func (c Client) DataGetEntity(username string) (*User, error) {
 
 func (c Client) Title(msg string) ([]string, error) {
 	result, err := c.command(Command{
-		command:            fmt.Sprintf(`title @a title {"test": "%s"}`, msg),
+		command:            fmt.Sprintf(`title @a title {"text": "%s"}`, msg),
 		expression:         `Showing new title for (.*)$`,
 		expressionNotFound: `No player was found`,
 	})
