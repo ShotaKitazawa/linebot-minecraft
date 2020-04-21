@@ -73,6 +73,31 @@ func (c Client) List() ([]string, error) {
 	return strings.Split(result[0], " "), nil
 }
 
+func (c Client) WhitelistAdd(username string) error {
+	_, err := c.command(Command{
+		command:            fmt.Sprintf(`whitelist add %s`, username),
+		expression:         fmt.Sprintf(`Added %s to the whitelist`, username),
+		expressionNotFound: `!!!not much!!!`,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Client) WhitelistRemove(username string) error {
+	_, err := c.command(Command{
+		command:    fmt.Sprintf(`whitelist remove %s`, username),
+		expression: fmt.Sprintf(`Removed %s from the whitelist`, username),
+
+		expressionNotFound: `!!!not much!!!`,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c Client) WhitelistList() ([]string, error) {
 	result, err := c.command(Command{
 		command:            `whitelist list`,
