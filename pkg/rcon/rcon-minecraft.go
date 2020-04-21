@@ -101,7 +101,7 @@ func (c Client) WhitelistRemove(username string) error {
 func (c Client) WhitelistList() ([]string, error) {
 	result, err := c.command(Command{
 		command:            `whitelist list`,
-		expression:         `There are [0-9].* whitelisted players: ?(.*)`,
+		expression:         `There are [0-9].* whitelisted players: (.*)`,
 		expressionNotFound: `There are no whitelisted players`,
 	})
 	if err != nil {

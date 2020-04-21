@@ -20,13 +20,24 @@ func (p PluginHelp) CommandName() string {
 func (p PluginHelp) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	msg := `ヘルプメッセージを表示します
+	msg := `
+/help
+ヘルプメッセージを表示します
 
 /list
-ログイン中のユーザ一覧を取得
+ログイン中のユーザ一覧を表示します
 
 /title hoge
 Minecraftのゲーム画面に hoge と表示されます
+
+/whitelist list
+ホワイトリストを表示します
+
+/whitelist add hoge
+ユーザ hoge をホワイトリストに追加します
+
+/whitelist delete hoge
+ユーザ hoge をホワイトリストから削除します
 `
 	queue = append(queue, msg)
 
