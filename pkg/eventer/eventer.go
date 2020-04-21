@@ -1,8 +1,11 @@
 package eventer
 
 import (
+	"fmt"
 	"time"
 
+	mapset "github.com/deckarep/golang-set"
+	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
@@ -12,22 +15,26 @@ import (
 
 type Eventer struct {
 	domain.LineClientConfig
+
 	sharedMem *sharedmem.SharedMem
 	rcon      *rcon.Client
 	Logger    *logrus.Logger
 }
 
-func New(groupID, channelSecret, channelToken string, m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *Eventer {
+func New(groupID, channelSecret, channelToken string, m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
+	client, err := linebot.New(channelSecret, channelToken)
+	if err != nil {
+		return nil, err
+	}
 	return &Eventer{
 		LineClientConfig: domain.LineClientConfig{
-			GroupID:       groupID,
-			ChannelSecret: channelSecret,
-			ChannelToken:  channelToken,
+			GroupID: groupID,
+			Client:  client,
 		},
 		sharedMem: m,
 		rcon:      rcon,
 		Logger:    logger,
-	}
+	}, nil
 }
 
 func (e *Eventer) Run() error {
@@ -56,16 +63,17 @@ func (e *Eventer) job() error {
 	var d domain.Domain
 
 	// get Minecraft metrics by RCON
-	loginUsernames, err := e.rcon.List()
+	currentLoginUserSet := mapset.NewSet()
+	currentLoginUsernames, err := e.rcon.List()
 	if err != nil {
 		return err
 	}
-	for _, username := range loginUsernames {
+	for _, username := range currentLoginUsernames {
 		userData, err := e.rcon.DataGetEntity(username)
 		if err != nil {
 			return err
 		}
-		d.LoginUsers = append(d.LoginUsers, domain.User{
+		currentLoginUser := domain.User{
 			Name:    username,
 			XpLevel: userData.XpLevel,
 			Position: domain.Position{
@@ -73,16 +81,42 @@ func (e *Eventer) job() error {
 				Y: userData.Y,
 				Z: userData.Z,
 			},
-		})
+		}
+		d.LoginUsers = append(d.LoginUsers, currentLoginUser)
+		currentLoginUserSet.Add(currentLoginUser)
 	}
 	d.WhitelistUsernames, err = e.rcon.WhitelistList()
 	if err != nil {
 		return err
 	}
 
-	// TODO: send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
+	// get logged in users from SharedMem
+	previousLoginUserSet := mapset.NewSet()
+	data, err := e.sharedMem.ReadSharedMem()
+	if err != nil {
+		// write to sharedMem & return
+		e.sharedMem.SendToChannel(d)
+		return err
+	}
+	for _, previousLoginUser := range data.LoginUsers {
+		previousLoginUserSet.Add(previousLoginUser)
+	}
 
-	// write to chan
+	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
+	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
+	if loggingInUsernameSet.Cardinality() != 0 {
+		if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet))).Do(); err != nil {
+			e.Logger.Error(`failed to push notification: `, err)
+		}
+	}
+	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
+	if loggingOutUsernameSet.Cardinality() != 0 {
+		if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet))).Do(); err != nil {
+			e.Logger.Error(`failed to push notification: `, err)
+		}
+	}
+
+	// write to sharedMem
 	e.sharedMem.SendToChannel(d)
 
 	return nil

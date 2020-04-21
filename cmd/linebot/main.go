@@ -81,7 +81,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	eventer := eventer.New(args.groupID, args.channelSecret, args.channelToken, m, rcon, logger)
+	eventer, err := eventer.New(args.groupID, args.channelSecret, args.channelToken, m, rcon, logger)
+	if err != nil {
+		panic(err)
+	}
 
 	// run eventer
 	go eventer.Run()
