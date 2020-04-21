@@ -1,9 +1,10 @@
 package domain
 
+import "github.com/line/line-bot-sdk-go/linebot"
+
 type LineClientConfig struct {
-	GroupID       string
-	ChannelSecret string
-	ChannelToken  string
+	Client  *linebot.Client
+	GroupID string
 }
 
 type Domain struct {
