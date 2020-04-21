@@ -6,14 +6,12 @@ import (
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
 
 type PluginTitle struct {
-	SharedMem *sharedmem.SharedMem
-	Rcon      *rcon.Client
-	Logger    *logrus.Logger
+	Rcon   *rcon.Client
+	Logger *logrus.Logger
 }
 
 func (p PluginTitle) CommandName() string {

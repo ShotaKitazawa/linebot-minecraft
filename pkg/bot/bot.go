@@ -26,13 +26,11 @@ func New(m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *Plug
 		Plugins: []PluginInterface{
 			command.PluginList{
 				SharedMem: m,
-				Rcon:      rcon,
 				Logger:    logger,
 			},
 			command.PluginTitle{
-				SharedMem: m,
-				Rcon:      rcon,
-				Logger:    logger,
+				Rcon:   rcon,
+				Logger: logger,
 			},
 			command.PluginWhitelist{
 				SharedMem: m,
@@ -40,9 +38,10 @@ func New(m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *Plug
 				Logger:    logger,
 			},
 			command.PluginHelp{
-				SharedMem: m,
-				Rcon:      rcon,
-				Logger:    logger,
+				Logger: logger,
+			},
+			command.PluginID{
+				Logger: logger,
 			},
 		},
 	}

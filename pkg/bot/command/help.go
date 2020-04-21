@@ -2,15 +2,11 @@ package command
 
 import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
 
 type PluginHelp struct {
-	SharedMem *sharedmem.SharedMem
-	Rcon      *rcon.Client
-	Logger    *logrus.Logger
+	Logger *logrus.Logger
 }
 
 func (p PluginHelp) CommandName() string {
