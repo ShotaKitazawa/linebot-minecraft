@@ -67,6 +67,10 @@ func (p PluginWhitelist) list() ([]interface{}, error) {
 		queue = append(queue, `Internal Error`)
 		return nil, err
 	}
+	if users == nil {
+		queue = append(queue, `ユーザが存在しません`)
+		return queue, nil
+	}
 	queue = append(queue, users)
 	return queue, nil
 }

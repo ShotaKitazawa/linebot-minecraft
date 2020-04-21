@@ -59,7 +59,7 @@ func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config *Confi
 			UserID:  event.Source.UserID,
 			GroupID: event.Source.GroupID,
 		},
-		Messages: strings.Split(message.Text, " "),
+		Messages: strings.Fields(message.Text),
 	}
 
 	// execute user function
@@ -74,6 +74,14 @@ func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config *Confi
 		switch typedElement := element.(type) {
 		case string:
 			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement)).Do(); err != nil {
+				return
+			}
+		case []string:
+			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(strings.Join(typedElement, ","))).Do(); err != nil {
+				return
+			}
+		case error:
+			if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typedElement.Error())).Do(); err != nil {
 				return
 			}
 		case []linebot.SendingMessage:
