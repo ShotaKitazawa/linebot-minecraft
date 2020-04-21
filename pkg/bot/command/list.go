@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
@@ -33,6 +31,10 @@ func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.Message
 	for _, user := range data.LoginUsers {
 		loginUsernames = append(loginUsernames, user.Name)
 	}
-	queue = append(queue, fmt.Sprintf("ログイン中のユーザ: %s", loginUsernames))
+	if loginUsernames == nil {
+		queue = append(queue, `ユーザが存在しません`)
+		return &botplug.MessageOutput{Queue: queue}
+	}
+	queue = append(queue, loginUsernames)
 	return &botplug.MessageOutput{Queue: queue}
 }

@@ -22,6 +22,10 @@ func (p PluginWhitelist) CommandName() string {
 func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
+	if len(input.Messages) == 1 {
+		queue = append(queue, `invalid arguments`)
+		return &botplug.MessageOutput{Queue: queue}
+	}
 	switch input.Messages[1] {
 	case `add`:
 		queue, _ = p.add(input.Messages[2:])
@@ -30,7 +34,7 @@ func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.Me
 	case `list`:
 		queue, _ = p.list()
 	default:
-		queue = append(queue, `no such command`)
+		queue = append(queue, `invalid arguments`)
 	}
 
 	return &botplug.MessageOutput{Queue: queue}
@@ -62,15 +66,24 @@ func (p PluginWhitelist) delete(users []string) ([]interface{}, error) {
 
 func (p PluginWhitelist) list() ([]interface{}, error) {
 	var queue []interface{}
-	users, err := p.Rcon.WhitelistList()
+
+	// read data from SharedMem
+	data, err := p.SharedMem.ReadSharedMem()
 	if err != nil {
+		p.Logger.Error(err)
 		queue = append(queue, `Internal Error`)
 		return nil, err
 	}
-	if users == nil {
+
+	// whitelist にいるユーザを LINE に送信
+	var usernames []string
+	for _, username := range data.WhitelistUsernames {
+		usernames = append(usernames, username)
+	}
+	if usernames == nil {
 		queue = append(queue, `ユーザが存在しません`)
 		return queue, nil
 	}
-	queue = append(queue, users)
+	queue = append(queue, usernames)
 	return queue, nil
 }
