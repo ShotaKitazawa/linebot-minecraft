@@ -83,7 +83,7 @@ func (e *Eventer) job() error {
 			},
 		}
 		d.LoginUsers = append(d.LoginUsers, currentLoginUser)
-		currentLoginUserSet.Add(currentLoginUser)
+		currentLoginUserSet.Add(currentLoginUser.Name)
 	}
 	d.WhitelistUsernames, err = e.rcon.WhitelistList()
 	if err != nil {
@@ -99,7 +99,7 @@ func (e *Eventer) job() error {
 		return err
 	}
 	for _, previousLoginUser := range data.LoginUsers {
-		previousLoginUserSet.Add(previousLoginUser)
+		previousLoginUserSet.Add(previousLoginUser.Name)
 	}
 
 	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
