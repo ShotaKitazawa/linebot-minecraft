@@ -69,8 +69,7 @@ func (c Client) List() ([]string, error) {
 	} else if result == nil {
 		return nil, nil
 	}
-	// TODO: delimiter 未確認
-	return strings.Split(result[0], " "), nil
+	return strings.Split(result[0], ", "), nil
 }
 
 func (c Client) WhitelistAdd(username string) error {
@@ -109,7 +108,7 @@ func (c Client) WhitelistList() ([]string, error) {
 	} else if result == nil {
 		return nil, nil
 	}
-	return strings.Split(result[0], " "), nil
+	return strings.Split(result[0], ", "), nil
 }
 
 func (c Client) DataGetEntity(username string) (*User, error) {
@@ -156,6 +155,5 @@ func (c Client) Title(msg string) ([]string, error) {
 	} else if result == nil {
 		return nil, nil
 	}
-	// TODO: delimiter 未確認
-	return strings.Split(result[0], " "), nil
+	return strings.Split(result[0], ", "), nil
 }
