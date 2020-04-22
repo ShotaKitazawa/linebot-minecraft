@@ -67,3 +67,8 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 	queue = append(queue, `no such command`)
 	return &botplug.MessageOutput{Queue: queue}
 }
+
+func (pc *PluginConfig) ReceiveJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
+	// TODO
+	return &botplug.MessageOutput{Queue: nil}
+}

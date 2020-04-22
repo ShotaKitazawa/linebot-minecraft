@@ -44,6 +44,10 @@ func NewHandler(config *Config) (*httphandler.WebhookHandler, error) {
 						log.Print(err)
 					}
 				}
+			case linebot.EventTypeJoin:
+				if err = ReceiveJoin(event, bot, config); err != nil {
+					log.Print(err)
+				}
 			}
 		}
 	})
@@ -64,11 +68,43 @@ func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config *Confi
 
 	// execute user function
 	output := config.Plugin.ReceiveMessageEntry(input)
-
 	if output == nil {
 		return
 	}
 
+	// proceed contents in queue
+	if err := sendQueue(event, bot, config, output); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReceiveJoin(event *linebot.Event, bot *linebot.Client, config *Config) (err error) {
+	input := &botplug.MessageInput{
+		Timestamp: event.Timestamp,
+		Source: &botplug.Source{
+			Type:    string(event.Source.Type),
+			UserID:  event.Source.UserID,
+			GroupID: event.Source.GroupID,
+		},
+	}
+
+	// execute user function
+	output := config.Plugin.ReceiveJoinEntry(input)
+	if output == nil {
+		return
+	}
+
+	// proceed contents in queue
+	if err := sendQueue(event, bot, config, output); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func sendQueue(event *linebot.Event, bot *linebot.Client, config *Config, output *botplug.MessageOutput) (err error) {
 	// proceed contents in queue
 	for _, element := range output.Queue {
 		switch typedElement := element.(type) {
