@@ -44,8 +44,8 @@ func NewHandler(config *Config) (*httphandler.WebhookHandler, error) {
 						log.Print(err)
 					}
 				}
-			case linebot.EventTypeJoin:
-				if err = ReceiveJoin(event, bot, config); err != nil {
+			case linebot.EventTypeMemberJoined:
+				if err = ReceiveMemberJoin(event, bot, config); err != nil {
 					log.Print(err)
 				}
 			}
@@ -80,7 +80,7 @@ func ReceiveTextMessage(event *linebot.Event, bot *linebot.Client, config *Confi
 	return nil
 }
 
-func ReceiveJoin(event *linebot.Event, bot *linebot.Client, config *Config) (err error) {
+func ReceiveMemberJoin(event *linebot.Event, bot *linebot.Client, config *Config) (err error) {
 	input := &botplug.MessageInput{
 		Timestamp: event.Timestamp,
 		Source: &botplug.Source{
@@ -91,7 +91,7 @@ func ReceiveJoin(event *linebot.Event, bot *linebot.Client, config *Config) (err
 	}
 
 	// execute user function
-	output := config.Plugin.ReceiveJoinEntry(input)
+	output := config.Plugin.ReceiveMemberJoinEntry(input)
 	if output == nil {
 		return
 	}

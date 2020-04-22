@@ -68,7 +68,8 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 	return &botplug.MessageOutput{Queue: queue}
 }
 
-func (pc *PluginConfig) ReceiveJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
-	// TODO
-	return &botplug.MessageOutput{Queue: nil}
+func (pc *PluginConfig) ReceiveMemberJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
+	var queue []interface{}
+	queue = append(queue, MessageMemberJoined)
+	return &botplug.MessageOutput{Queue: queue}
 }
