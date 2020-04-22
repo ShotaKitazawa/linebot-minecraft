@@ -68,19 +68,20 @@ func (e *Eventer) job() error {
 	if err != nil {
 		return err
 	}
+	// TODO: DataGetEntity 実装
 	for _, username := range currentLoginUsernames {
-		userData, err := e.rcon.DataGetEntity(username)
-		if err != nil {
-			return err
-		}
+		//userData, err := e.rcon.DataGetEntity(username)
+		//if err != nil {
+		//	return err
+		//}
 		currentLoginUser := domain.User{
-			Name:    username,
-			XpLevel: userData.XpLevel,
-			Position: domain.Position{
-				X: userData.X,
-				Y: userData.Y,
-				Z: userData.Z,
-			},
+			Name: username,
+			//XpLevel: userData.XpLevel,
+			//Position: domain.Position{
+			//	X: userData.X,
+			//	Y: userData.Y,
+			//	Z: userData.Z,
+			//},
 		}
 		d.LoginUsers = append(d.LoginUsers, currentLoginUser)
 		currentLoginUserSet.Add(currentLoginUser.Name)

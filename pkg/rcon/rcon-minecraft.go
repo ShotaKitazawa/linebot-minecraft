@@ -3,7 +3,6 @@ package rcon
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/seeruk/minecraft-rcon/rcon"
@@ -111,6 +110,8 @@ func (c Client) WhitelistList() ([]string, error) {
 	return strings.Split(result[0], ", "), nil
 }
 
+// TODO
+/*
 func (c Client) DataGetEntity(username string) (*User, error) {
 	array, err := c.command(Command{
 		command:            fmt.Sprintf(`data get entity %s`, username),
@@ -143,6 +144,7 @@ func (c Client) DataGetEntity(username string) (*User, error) {
 	}
 	return user, nil
 }
+*/
 
 func (c Client) Title(msg string) ([]string, error) {
 	result, err := c.command(Command{
