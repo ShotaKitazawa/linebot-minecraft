@@ -6,6 +6,7 @@ import (
 
 type BotPlugin interface {
 	ReceiveMessageEntry(*MessageInput) *MessageOutput
+	ReceiveMemberJoinEntry(*MessageInput) *MessageOutput
 }
 
 type MessageInput struct {
