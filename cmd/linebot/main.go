@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/namsral/flag"
 	"github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ func init() {
 type argsConfig struct {
 	channelSecret string
 	channelToken  string
-	groupID       string
+	groupIDs      string
 	rconHost      string
 	rconPort      int
 	rconPassword  string
@@ -45,7 +46,7 @@ func newArgsConfig() *argsConfig {
 	fl := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "")
 	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "")
-	fl.StringVar(&cfg.groupID, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
+	fl.StringVar(&cfg.groupIDs, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
 	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
 	fl.IntVar(&cfg.rconPort, "rcon-port", 25575, "RCON Port")
 	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
@@ -60,7 +61,7 @@ func newArgsConfig() *argsConfig {
 
 	if cfg.channelSecret == "" ||
 		cfg.channelToken == "" ||
-		cfg.groupID == "" ||
+		cfg.groupIDs == "" ||
 		cfg.rconHost == "" ||
 		cfg.rconPort == 0 ||
 		cfg.rconPassword == "" {
@@ -81,7 +82,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	eventer, err := eventer.New(args.groupID, args.channelSecret, args.channelToken, m, rcon, logger)
+	eventer, err := eventer.New(args.groupIDs, args.channelSecret, args.channelToken, m, rcon, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +94,7 @@ func main() {
 
 	// run bot
 	handler, err := line.NewHandler(&line.Config{
-		GroupID:       args.groupID,
+		GroupIDs:      strings.Split(args.groupIDs, ","),
 		ChannelSecret: args.channelSecret,
 		ChannelToken:  args.channelToken,
 		Plugin:        bot.New(m, rcon, logger),

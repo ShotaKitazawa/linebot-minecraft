@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	GroupID       string
+	GroupIDs      []string
 	ChannelSecret string
 	ChannelToken  string
 	Plugin        botplug.BotPlugin
@@ -121,8 +121,7 @@ func sendQueue(event *linebot.Event, bot *linebot.Client, config *Config, output
 				return
 			}
 		case []linebot.SendingMessage:
-			_, err = bot.PushMessage(config.GroupID, typedElement...).Do()
-			if err != nil {
+			if _, err = bot.ReplyMessage(event.ReplyToken, typedElement...).Do(); err != nil {
 				return
 			}
 		}

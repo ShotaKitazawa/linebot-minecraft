@@ -3,8 +3,8 @@ package domain
 import "github.com/line/line-bot-sdk-go/linebot"
 
 type LineClientConfig struct {
-	Client  *linebot.Client
-	GroupID string
+	Client   *linebot.Client
+	GroupIDs []string
 }
 
 type Domain struct {
