@@ -1,7 +1,6 @@
 package eventer
 
 import (
-	"fmt"
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
@@ -103,19 +102,21 @@ func (e *Eventer) job() error {
 		previousLoginUserSet.Add(previousLoginUser.Name)
 	}
 
-	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
-	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
-	if loggingInUsernameSet.Cardinality() != 0 {
-		if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet))).Do(); err != nil {
-			e.Logger.Error(`failed to push notification: `, err)
+	/*
+		// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
+		loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
+		if loggingInUsernameSet.Cardinality() != 0 {
+			if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet))).Do(); err != nil {
+				e.Logger.Error(`failed to push notification: `, err)
+			}
 		}
-	}
-	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
-	if loggingOutUsernameSet.Cardinality() != 0 {
-		if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet))).Do(); err != nil {
-			e.Logger.Error(`failed to push notification: `, err)
+		loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
+		if loggingOutUsernameSet.Cardinality() != 0 {
+			if _, err := e.Client.PushMessage(e.GroupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet))).Do(); err != nil {
+				e.Logger.Error(`failed to push notification: `, err)
+			}
 		}
-	}
+	*/
 
 	// write to sharedMem
 	e.sharedMem.SendToChannel(d)
