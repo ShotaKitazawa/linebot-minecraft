@@ -108,7 +108,7 @@ func main() {
 	logger = newLogger(args.loglevel)
 
 	// run sharedMem
-	m := localmem.New()
+	m := localmem.New(logger)
 	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
 	if err != nil {
 		panic(err)

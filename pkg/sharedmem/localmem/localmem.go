@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -13,17 +14,18 @@ var (
 )
 
 type SharedMem struct {
-	// TODO : sendChannel -> sendChannels
-	sendStream chan<- domain.Entity
-	// TODO : receiveChannel -> receiveChannels
+	logger        *logrus.Logger
+	sendStream    chan<- domain.Entity
 	receiveStream <-chan domain.Entity
 }
 
-func New() *SharedMem {
+func New(logger *logrus.Logger) *SharedMem {
 	stream := make(chan domain.Entity)
-	m := new(SharedMem)
-	m.sendStream = stream
-	m.receiveStream = stream
+	m := &SharedMem{
+		logger:        logger,
+		sendStream:    stream,
+		receiveStream: stream,
+	}
 	go m.receiveFromChannelAndWriteSharedMem()
 	return m
 }
