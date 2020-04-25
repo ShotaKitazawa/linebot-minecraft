@@ -10,7 +10,10 @@ import (
 )
 
 type Client struct {
-	*rcon.Client
+	//*rcon.Client
+	host     string
+	port     int
+	password string
 }
 
 type User struct {
@@ -26,11 +29,11 @@ type Position struct {
 }
 
 func New(host string, port int, password string) (*Client, error) {
-	client, err := rcon.NewClient(host, port, password)
-	if err != nil {
-		return nil, err
-	}
-	return &Client{client}, nil
+	return &Client{
+		host:     host,
+		port:     port,
+		password: password,
+	}, nil
 }
 
 type Command struct {
@@ -40,7 +43,13 @@ type Command struct {
 }
 
 func (c Client) command(command Command) ([]string, error) {
-	response, err := c.Client.SendCommand(command.command)
+	// 毎回 client を作り直す
+	client, err := rcon.NewClient(c.host, c.port, c.password)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.SendCommand(command.command)
 	if err != nil {
 		return nil, err
 	}
