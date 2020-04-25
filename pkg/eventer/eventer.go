@@ -115,7 +115,6 @@ func (e *Eventer) job() error {
 		currentData.AllUsers = append(currentData.AllUsers, currentUser)
 	}
 	for _, previousUser := range previousData.AllUsers {
-		currentData.AllUsers = append(currentData.AllUsers, previousUser)
 		var flag bool
 		for _, currentUser := range currentData.LoginUsers {
 			if previousUser.Name == currentUser.Name {
@@ -123,6 +122,7 @@ func (e *Eventer) job() error {
 			}
 		}
 		if !flag {
+			currentData.AllUsers = append(currentData.AllUsers, previousUser)
 			currentData.LogoutUsers = append(currentData.LogoutUsers, previousUser)
 		}
 	}
