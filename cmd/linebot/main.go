@@ -17,6 +17,8 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem/localmem"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem/redis"
 )
 
@@ -52,6 +54,9 @@ type argsConfig struct {
 	channelSecret string
 	channelToken  string
 	groupIDs      string
+	sharedmemMode string
+	redisHost     string
+	redisPort     int
 	rconHost      string
 	rconPort      int
 	rconPassword  string
@@ -62,9 +67,12 @@ func newArgsConfig() *argsConfig {
 
 	fl := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fl.StringVar(&cfg.loglevel, "log-level", "info", "Log Level (debug, info, warn, error)")
-	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "")
-	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "")
+	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "LINE Bot's Channel Secret")
+	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "LINE Bot's Channel Token")
 	fl.StringVar(&cfg.groupIDs, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
+	fl.StringVar(&cfg.sharedmemMode, "sharedmem-mode", "local", `using Shared Memory ("local" or "redis")`)
+	fl.StringVar(&cfg.redisHost, "redis-host", "127.0.0.1", "Redis Host (enabled when sharedmem-mode=redis)")
+	fl.IntVar(&cfg.redisPort, "redis-port", 6379, "Redis Port (enabled when sharedmem-mode=redis)")
 	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
 	fl.IntVar(&cfg.rconPort, "rcon-port", 25575, "RCON Port")
 	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
@@ -87,6 +95,13 @@ func newArgsConfig() *argsConfig {
 		os.Exit(2)
 	}
 
+	if !(cfg.sharedmemMode == "local" ||
+		cfg.sharedmemMode == "redis") {
+		fmt.Println("sharedmemMode mismatch")
+		os.Exit(2)
+
+	}
+
 	if !(cfg.loglevel == "debug" ||
 		cfg.loglevel == "info" ||
 		cfg.loglevel == "warn" ||
@@ -107,15 +122,25 @@ func main() {
 	// set logger
 	logger = newLogger(args.loglevel)
 
-	//// run sharedMem & get sharedMem instance
-	//m, err := localmem.New(logger)
-	//if err != nil {
-	//	panic(err)
-	//}
-	m, err := redis.New(logger, "127.0.0.1", 6379)
-	if err != nil {
-		panic(err)
-	}
+	m := func(sharedmemMode string) sharedmem.SharedMem {
+		switch sharedmemMode {
+		case "local":
+			// run sharedMem & get sharedMem instance
+			m, err := localmem.New(logger)
+			if err != nil {
+				panic(err)
+			}
+			return m
+		case "redis":
+			m, err := redis.New(logger, args.redisHost, args.redisPort)
+			if err != nil {
+				panic(err)
+			}
+			return m
+		default:
+			panic(fmt.Errorf("sharedmemMode mismatch"))
+		}
+	}(args.sharedmemMode)
 
 	// get rcon instance
 	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
