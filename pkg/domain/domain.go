@@ -8,8 +8,12 @@ type LineClientConfig struct {
 }
 
 type Domain struct {
+	//ログインしたことのあるすべてのユーザ
+	AllUsers []User
 	//ログインしてるユーザ
 	LoginUsers []User
+	//ログインしてないユーザ
+	LogoutUsers []User
 	//whitelistなユーザ名
 	WhitelistUsernames []string
 }

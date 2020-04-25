@@ -47,6 +47,14 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		return
 	}
+	for _, user := range data.LogoutUsers {
+		ch <- prometheus.MustNewConstMetric(
+			describeUserInfo,
+			prometheus.GaugeValue,
+			0,
+			user.Name,
+		)
+	}
 	for _, user := range data.LoginUsers {
 		ch <- prometheus.MustNewConstMetric(
 			describeUserInfo,
@@ -54,7 +62,9 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 			1,
 			user.Name,
 		)
+	}
 
+	for _, user := range data.AllUsers {
 		ch <- prometheus.MustNewConstMetric(
 			describeHealthGauge,
 			prometheus.GaugeValue,

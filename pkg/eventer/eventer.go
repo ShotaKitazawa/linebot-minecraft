@@ -65,7 +65,7 @@ func (e *Eventer) cronjob() error {
 
 func (e *Eventer) job() error {
 	var err error
-	var d domain.Domain
+	var currentData domain.Domain
 
 	// get Minecraft metrics by RCON
 	currentLoginUserSet := mapset.NewSet()
@@ -91,31 +91,48 @@ func (e *Eventer) job() error {
 				Z: userData.Z,
 			},
 		}
-		d.LoginUsers = append(d.LoginUsers, currentLoginUser)
+		currentData.LoginUsers = append(currentData.LoginUsers, currentLoginUser)
 		currentLoginUserSet.Add(currentLoginUser.Name)
 	}
-	d.WhitelistUsernames, err = e.rcon.WhitelistList()
+	currentData.WhitelistUsernames, err = e.rcon.WhitelistList()
 	if err != nil {
 		return err
 	}
 
 	// get logged in users from SharedMem
 	previousLoginUserSet := mapset.NewSet()
-	data, err := e.sharedMem.ReadSharedMem()
+	previousData, err := e.sharedMem.ReadSharedMem()
 	if err != nil {
 		// write to sharedMem & return
-		e.sharedMem.SendToChannel(d)
+		e.sharedMem.SendToChannel(currentData)
 		return err
 	}
-	for _, previousLoginUser := range data.LoginUsers {
+	for _, previousLoginUser := range previousData.LoginUsers {
 		previousLoginUserSet.Add(previousLoginUser.Name)
+	}
+
+	// store domain.AllUsers, LogoutUsers
+	for _, currentUser := range currentData.LoginUsers {
+		currentData.AllUsers = append(currentData.AllUsers, currentUser)
+	}
+	for _, previousUser := range previousData.AllUsers {
+		currentData.AllUsers = append(currentData.AllUsers, previousUser)
+		var flag bool
+		for _, currentUser := range currentData.LoginUsers {
+			if previousUser.Name == currentUser.Name {
+				flag = true
+			}
+		}
+		if !flag {
+			currentData.LogoutUsers = append(currentData.LogoutUsers, previousUser)
+		}
 	}
 
 	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
 	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
 	if loggingInUsernameSet.Cardinality() != 0 {
 		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet))).Do(); err != nil {
+			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet.ToSlice()))).Do(); err != nil {
 				e.Logger.Error(`failed to push notification: `, err)
 			}
 		}
@@ -123,14 +140,14 @@ func (e *Eventer) job() error {
 	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
 	if loggingOutUsernameSet.Cardinality() != 0 {
 		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet))).Do(); err != nil {
+			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet.ToSlice()))).Do(); err != nil {
 				e.Logger.Error(`failed to push notification: `, err)
 			}
 		}
 	}
 
 	// write to sharedMem
-	e.sharedMem.SendToChannel(d)
+	e.sharedMem.SendToChannel(currentData)
 
 	return nil
 }
