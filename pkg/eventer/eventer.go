@@ -65,7 +65,7 @@ func (e *Eventer) cronjob() error {
 
 func (e *Eventer) job() error {
 	var err error
-	var currentData domain.Domain
+	var currentData domain.Entity
 
 	// get Minecraft metrics by RCON
 	currentLoginUserSet := mapset.NewSet()
@@ -101,10 +101,10 @@ func (e *Eventer) job() error {
 
 	// get logged in users from SharedMem
 	previousLoginUserSet := mapset.NewSet()
-	previousData, err := e.sharedMem.ReadSharedMem()
+	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		// write to sharedMem & return
-		return e.sharedMem.SendToChannel(currentData)
+		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
 	}
 	for _, previousLoginUser := range previousData.LoginUsers {
 		previousLoginUserSet.Add(previousLoginUser.Name)
@@ -146,7 +146,7 @@ func (e *Eventer) job() error {
 	}
 
 	// write to sharedMem
-	e.sharedMem.SendToChannel(currentData)
+	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
 
 	return nil
 }

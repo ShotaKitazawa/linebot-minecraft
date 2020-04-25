@@ -7,7 +7,7 @@ type LineClientConfig struct {
 	GroupIDs []string
 }
 
-type Domain struct {
+type Entity struct {
 	//ログインしたことのあるすべてのユーザ
 	AllUsers []User
 	//ログインしてるユーザ
