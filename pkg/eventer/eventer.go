@@ -14,6 +14,10 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
+const (
+	cronJobInterval = 10
+)
+
 type Eventer struct {
 	domain.LineClientConfig
 
@@ -46,7 +50,7 @@ func (e *Eventer) cronjob() error {
 	if err := e.job(); err != nil {
 		e.Logger.Error(err)
 	}
-	t := time.NewTicker(10 * time.Second)
+	t := time.NewTicker(cronJobInterval * time.Second)
 	for {
 		select {
 		case <-t.C:
@@ -69,20 +73,22 @@ func (e *Eventer) job() error {
 	if err != nil {
 		return err
 	}
-	// TODO: DataGetEntity 実装
 	for _, username := range currentLoginUsernames {
-		//userData, err := e.rcon.DataGetEntity(username)
-		//if err != nil {
-		//	return err
-		//}
+		userData, err := e.rcon.DataGetEntity(username)
+		if err != nil {
+			return err
+		} else if userData == nil {
+			e.Logger.Warn(`userData is nil`)
+			return nil
+		}
 		currentLoginUser := domain.User{
-			Name: username,
-			//XpLevel: userData.XpLevel,
-			//Position: domain.Position{
-			//	X: userData.X,
-			//	Y: userData.Y,
-			//	Z: userData.Z,
-			//},
+			Name:    username,
+			XpLevel: userData.XpLevel,
+			Position: domain.Position{
+				X: userData.X,
+				Y: userData.Y,
+				Z: userData.Z,
+			},
 		}
 		d.LoginUsers = append(d.LoginUsers, currentLoginUser)
 		currentLoginUserSet.Add(currentLoginUser.Name)
