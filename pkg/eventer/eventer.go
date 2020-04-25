@@ -83,6 +83,7 @@ func (e *Eventer) job() error {
 		}
 		currentLoginUser := domain.User{
 			Name:    username,
+			Health:  userData.Health,
 			XpLevel: userData.XpLevel,
 			Position: domain.Position{
 				X: userData.X,

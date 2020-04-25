@@ -8,11 +8,14 @@ import (
 	"strings"
 
 	"github.com/namsral/flag"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
@@ -75,22 +78,30 @@ func newArgsConfig() *argsConfig {
 func main() {
 	var err error
 
-	// initialize
+	// args parse
 	args := newArgsConfig()
+
+	// run sharedMem
 	m := sharedmem.New()
 	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
 	if err != nil {
 		panic(err)
 	}
+
+	// run eventer
 	eventer, err := eventer.New(args.groupIDs, args.channelSecret, args.channelToken, m, rcon, logger)
 	if err != nil {
 		panic(err)
 	}
-
-	// run eventer
 	go eventer.Run()
 
-	// TODO: run exporter
+	// run exporter
+	collector, err := exporter.New(m, logger)
+	if err != nil {
+		panic(err)
+	}
+	prometheus.MustRegister(collector)
+	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
 	handler, err := line.NewHandler(&line.Config{
@@ -102,6 +113,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	http.Handle("/", handler)
+	http.Handle("/linebot", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
