@@ -1,6 +1,5 @@
-package sharedmem
+package localmem
 
-/*
 import (
 	"fmt"
 	"sync"
@@ -8,14 +7,16 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 )
 
-var mu sync.Mutex
+var (
+	mu           sync.Mutex
+	sharedMemory *domain.Domain
+)
 
 type SharedMem struct {
 	// TODO : sendChannel -> sendChannels
 	sendStream chan<- domain.Domain
 	// TODO : receiveChannel -> receiveChannels
 	receiveStream <-chan domain.Domain
-	data          *domain.Domain
 }
 
 func New() *SharedMem {
@@ -29,7 +30,7 @@ func New() *SharedMem {
 
 func (m *SharedMem) ReadSharedMem() (*domain.Domain, error) {
 	mu.Lock()
-	result := m.data
+	result := sharedMemory
 	mu.Unlock()
 	if result == nil {
 		return nil, fmt.Errorf("no such data")
@@ -47,11 +48,9 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 		select {
 		case d := <-m.receiveStream:
 			mu.Lock()
-			m.data = &d
+			sharedMemory = &d
 			mu.Unlock()
 		}
 	}
 	// return nil
 }
-
-*/

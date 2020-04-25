@@ -12,11 +12,11 @@ const (
 
 type Collector struct {
 	describes []*prometheus.Desc
-	sharedmem *sharedmem.SharedMem
+	sharedmem sharedmem.SharedMem
 	Logger    *logrus.Logger
 }
 
-func New(m *sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
+func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
 	describes := []*prometheus.Desc{
 		prometheus.NewDesc(
 			"minecraft_user_info",

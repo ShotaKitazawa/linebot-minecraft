@@ -21,12 +21,12 @@ const (
 type Eventer struct {
 	domain.LineClientConfig
 
-	sharedMem *sharedmem.SharedMem
+	sharedMem sharedmem.SharedMem
 	rcon      *rcon.Client
 	Logger    *logrus.Logger
 }
 
-func New(groupIDs, channelSecret, channelToken string, m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
+func New(groupIDs, channelSecret, channelToken string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
 	client, err := linebot.New(channelSecret, channelToken)
 	if err != nil {
 		return nil, err

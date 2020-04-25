@@ -7,7 +7,7 @@ import (
 )
 
 type PluginList struct {
-	SharedMem *sharedmem.SharedMem
+	SharedMem sharedmem.SharedMem
 	Logger    *logrus.Logger
 }
 

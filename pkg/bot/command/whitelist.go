@@ -10,7 +10,7 @@ import (
 )
 
 type PluginWhitelist struct {
-	SharedMem *sharedmem.SharedMem
+	SharedMem sharedmem.SharedMem
 	Rcon      *rcon.Client
 	Logger    *logrus.Logger
 }
