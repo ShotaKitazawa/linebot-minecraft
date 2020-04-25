@@ -3,6 +3,7 @@ package rcon
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/seeruk/minecraft-rcon/rcon"
@@ -13,8 +14,8 @@ type Client struct {
 }
 
 type User struct {
-	Health  string
-	XpLevel string
+	Health  float32
+	XpLevel uint
 	Position
 }
 
@@ -110,32 +111,63 @@ func (c Client) WhitelistList() ([]string, error) {
 	return strings.Split(result[0], ", "), nil
 }
 
-// TODO
-/*
 func (c Client) DataGetEntity(username string) (*User, error) {
 	array, err := c.command(Command{
-		command:            fmt.Sprintf(`data get entity %s`, username),
-		expression:         fmt.Sprintf(`%s has the following entity data: {.*Health: (.*?),.*XpLevel: (.*?),.*Pos: \[(.*?)d, (.*?)d, (.*?)d\].*$`, username),
-		expressionNotFound: `!!!not much!!!`,
+		command:            fmt.Sprintf(`data get entity %s Health`, username),
+		expression:         fmt.Sprintf(`^%s has the following entity data: (.*)f$`, username),
+		expressionNotFound: `No entity was found`,
 	})
 	if err != nil {
 		return nil, err
+	} else if array == nil {
+		return nil, nil
 	}
-	posX, err := strconv.ParseFloat(array[2], 32)
+	health, err := strconv.ParseFloat(array[0], 32)
+	if err != nil {
+		return nil, nil
+	}
+
+	array, err = c.command(Command{
+		command:            fmt.Sprintf(`data get entity %s XpLevel`, username),
+		expression:         fmt.Sprintf(`^%s has the following entity data: (.*)$`, username),
+		expressionNotFound: `No entity was found`,
+	})
+	if err != nil {
+		return nil, err
+	} else if array == nil {
+		return nil, nil
+	}
+	xpLevel, err := strconv.Atoi(array[0])
+	if err != nil {
+		return nil, nil
+	}
+
+	array, err = c.command(Command{
+		command:            fmt.Sprintf(`data get entity %s Pos`, username),
+		expression:         fmt.Sprintf(`^%s has the following entity data: \[(.*?)d, (.*?)d, (.*?)d\]`, username),
+		expressionNotFound: `No entity was found`,
+	})
+	if err != nil {
+		return nil, err
+	} else if array == nil {
+		return nil, nil
+	}
+	posX, err := strconv.ParseFloat(array[0], 32)
 	if err != nil {
 		return nil, err
 	}
-	posY, err := strconv.ParseFloat(array[3], 32)
+	posY, err := strconv.ParseFloat(array[1], 32)
 	if err != nil {
 		return nil, err
 	}
-	posZ, err := strconv.ParseFloat(array[4], 32)
+	posZ, err := strconv.ParseFloat(array[2], 32)
 	if err != nil {
 		return nil, err
 	}
+
 	user := &User{
-		Health:  array[0],
-		XpLevel: array[1],
+		Health:  float32(health),
+		XpLevel: uint(xpLevel),
 		Position: Position{
 			X: float32(posX),
 			Y: float32(posY),
@@ -144,7 +176,6 @@ func (c Client) DataGetEntity(username string) (*User, error) {
 	}
 	return user, nil
 }
-*/
 
 func (c Client) Title(msg string) ([]string, error) {
 	result, err := c.command(Command{

@@ -8,15 +8,20 @@ type LineClientConfig struct {
 }
 
 type Domain struct {
+	//ログインしたことのあるすべてのユーザ
+	AllUsers []User
 	//ログインしてるユーザ
 	LoginUsers []User
+	//ログインしてないユーザ
+	LogoutUsers []User
 	//whitelistなユーザ名
 	WhitelistUsernames []string
 }
 
 type User struct {
 	Name     string
-	XpLevel  string
+	Health   float32
+	XpLevel  uint
 	Position Position
 	Biome    string // Minecraft 1.16~
 }
