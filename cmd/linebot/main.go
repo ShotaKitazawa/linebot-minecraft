@@ -28,13 +28,27 @@ var (
 
 var logger = logrus.New()
 
-func init() {
+func newLogger(loglevel string) *logrus.Logger {
+	var logger = logrus.New()
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetOutput(os.Stdout)
-	logger.SetLevel(logrus.DebugLevel)
+	switch loglevel {
+	case "debug":
+		logger.SetLevel(logrus.DebugLevel)
+	case "info":
+		logger.SetLevel(logrus.InfoLevel)
+	case "warn":
+		logger.SetLevel(logrus.WarnLevel)
+	case "error":
+		logger.SetLevel(logrus.ErrorLevel)
+	default:
+		panic(fmt.Errorf("newLogger: invalid arguments"))
+	}
+	return logger
 }
 
 type argsConfig struct {
+	loglevel      string
 	channelSecret string
 	channelToken  string
 	groupIDs      string
@@ -47,6 +61,7 @@ func newArgsConfig() *argsConfig {
 	cfg := &argsConfig{}
 
 	fl := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	fl.StringVar(&cfg.loglevel, "log-level", "info", "Log Level (debug, info, warn, error)")
 	fl.StringVar(&cfg.channelSecret, "line-channel-secret", "", "")
 	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "")
 	fl.StringVar(&cfg.groupIDs, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
@@ -72,6 +87,14 @@ func newArgsConfig() *argsConfig {
 		os.Exit(2)
 	}
 
+	if !(cfg.loglevel == "debug" ||
+		cfg.loglevel == "info" ||
+		cfg.loglevel == "warn" ||
+		cfg.loglevel == "error") {
+		fmt.Println("log-level mismatch")
+		os.Exit(2)
+	}
+
 	return cfg
 }
 
@@ -80,6 +103,9 @@ func main() {
 
 	// args parse
 	args := newArgsConfig()
+
+	// set logger
+	logger = newLogger(args.loglevel)
 
 	// run sharedMem
 	m := localmem.New()
