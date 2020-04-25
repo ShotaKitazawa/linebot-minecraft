@@ -55,7 +55,7 @@ func newArgsConfig() *argsConfig {
 	fl.StringVar(&cfg.rconPassword, "rcon-password", "", "RCON Password")
 
 	var showVersion bool
-	flag.BoolVar(&showVersion, "v", false, "show application version")
+	fl.BoolVar(&showVersion, "v", false, "show application version")
 	fl.Parse(os.Args[1:])
 
 	if showVersion {
