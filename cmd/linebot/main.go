@@ -17,7 +17,7 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem/localmem"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem/redis"
 )
 
 var (
@@ -107,8 +107,17 @@ func main() {
 	// set logger
 	logger = newLogger(args.loglevel)
 
-	// run sharedMem
-	m := localmem.New(logger)
+	//// run sharedMem & get sharedMem instance
+	//m, err := localmem.New(logger)
+	//if err != nil {
+	//	panic(err)
+	//}
+	m, err := redis.New(logger, "127.0.0.1", 6379)
+	if err != nil {
+		panic(err)
+	}
+
+	// get rcon instance
 	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
 	if err != nil {
 		panic(err)
