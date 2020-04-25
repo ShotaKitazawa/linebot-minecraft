@@ -104,8 +104,7 @@ func (e *Eventer) job() error {
 	previousData, err := e.sharedMem.ReadSharedMem()
 	if err != nil {
 		// write to sharedMem & return
-		e.sharedMem.SendToChannel(currentData)
-		return err
+		return e.sharedMem.SendToChannel(currentData)
 	}
 	for _, previousLoginUser := range previousData.LoginUsers {
 		previousLoginUserSet.Add(previousLoginUser.Name)

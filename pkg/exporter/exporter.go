@@ -45,6 +45,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 
 	data, err := c.sharedmem.ReadSharedMem()
 	if err != nil {
+		c.Logger.Warn(err)
 		return
 	}
 	for _, user := range data.LogoutUsers {
