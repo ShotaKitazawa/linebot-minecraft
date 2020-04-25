@@ -1,4 +1,4 @@
-package sharedmem
+package localmem
 
 import (
 	"fmt"
@@ -7,18 +7,20 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 )
 
-var mu sync.Mutex
+var (
+	mu           sync.Mutex
+	sharedMemory *domain.Entity
+)
 
 type SharedMem struct {
 	// TODO : sendChannel -> sendChannels
-	sendStream chan<- domain.Domain
+	sendStream chan<- domain.Entity
 	// TODO : receiveChannel -> receiveChannels
-	receiveStream <-chan domain.Domain
-	data          *domain.Domain
+	receiveStream <-chan domain.Entity
 }
 
 func New() *SharedMem {
-	stream := make(chan domain.Domain)
+	stream := make(chan domain.Entity)
 	m := new(SharedMem)
 	m.sendStream = stream
 	m.receiveStream = stream
@@ -26,9 +28,9 @@ func New() *SharedMem {
 	return m
 }
 
-func (m *SharedMem) ReadSharedMem() (*domain.Domain, error) {
+func (m *SharedMem) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
 	mu.Lock()
-	result := m.data
+	result := sharedMemory
 	mu.Unlock()
 	if result == nil {
 		return nil, fmt.Errorf("no such data")
@@ -36,7 +38,7 @@ func (m *SharedMem) ReadSharedMem() (*domain.Domain, error) {
 	return result, nil
 }
 
-func (m *SharedMem) SendToChannel(data domain.Domain) error {
+func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
 	m.sendStream <- data
 	return nil
 }
@@ -46,7 +48,7 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 		select {
 		case d := <-m.receiveStream:
 			mu.Lock()
-			m.data = &d
+			sharedMemory = &d
 			mu.Unlock()
 		}
 	}

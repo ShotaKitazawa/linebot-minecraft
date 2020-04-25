@@ -12,11 +12,11 @@ const (
 
 type Collector struct {
 	describes []*prometheus.Desc
-	sharedmem *sharedmem.SharedMem
+	sharedmem sharedmem.SharedMem
 	Logger    *logrus.Logger
 }
 
-func New(m *sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
+func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
 	describes := []*prometheus.Desc{
 		prometheus.NewDesc(
 			"minecraft_user_info",
@@ -43,7 +43,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 	describeUserInfo := c.describes[0]
 	describeHealthGauge := c.describes[1]
 
-	data, err := c.sharedmem.ReadSharedMem()
+	data, err := c.sharedmem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		c.Logger.Warn(err)
 		return

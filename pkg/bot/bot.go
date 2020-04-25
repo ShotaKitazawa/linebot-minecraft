@@ -12,13 +12,13 @@ import (
 )
 
 type PluginConfig struct {
-	SharedMem *sharedmem.SharedMem
+	SharedMem sharedmem.SharedMem
 	Rcon      *rcon.Client
 	Logger    *logrus.Logger
 	Plugins   []PluginInterface
 }
 
-func New(m *sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
+func New(m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
 	return &PluginConfig{
 		SharedMem: m,
 		Rcon:      rcon,

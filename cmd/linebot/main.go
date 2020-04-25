@@ -17,7 +17,7 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem/localmem"
 )
 
 var (
@@ -82,7 +82,7 @@ func main() {
 	args := newArgsConfig()
 
 	// run sharedMem
-	m := sharedmem.New()
+	m := localmem.New()
 	rcon, err := rcon.New(args.rconHost, args.rconPort, args.rconPassword)
 	if err != nil {
 		panic(err)

@@ -7,7 +7,7 @@ import (
 )
 
 type PluginList struct {
-	SharedMem *sharedmem.SharedMem
+	SharedMem sharedmem.SharedMem
 	Logger    *logrus.Logger
 }
 
@@ -19,7 +19,7 @@ func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.Message
 	var queue []interface{}
 
 	// read data from SharedMem
-	data, err := p.SharedMem.ReadSharedMem()
+	data, err := p.SharedMem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		p.Logger.Error(err)
 		queue = append(queue, "Internal Error")
