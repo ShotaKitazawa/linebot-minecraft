@@ -1,9 +1,8 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
@@ -23,7 +22,7 @@ func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.Me
 	var queue []interface{}
 
 	if len(input.Messages) == 1 {
-		queue = append(queue, `invalid arguments`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 	switch input.Messages[1] {
@@ -34,7 +33,7 @@ func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.Me
 	case `list`:
 		queue, _ = p.list()
 	default:
-		queue = append(queue, `invalid arguments`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
 	}
 
 	return &botplug.MessageOutput{Queue: queue}
@@ -44,9 +43,9 @@ func (p PluginWhitelist) add(users []string) ([]interface{}, error) {
 	var queue []interface{}
 	for _, username := range users {
 		if p.Rcon.WhitelistAdd(username) != nil {
-			queue = append(queue, fmt.Sprintf(`ユーザ指定が間違っています: %s`, username))
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageUserIncorrect))
 		} else {
-			queue = append(queue, fmt.Sprintf(`ユーザをホワイトリストに追加しました: %s`, username))
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageWhitelistAdd, username))
 		}
 	}
 	return queue, nil
@@ -56,9 +55,9 @@ func (p PluginWhitelist) delete(users []string) ([]interface{}, error) {
 	var queue []interface{}
 	for _, username := range users {
 		if p.Rcon.WhitelistRemove(username) != nil {
-			queue = append(queue, fmt.Sprintf(`ユーザ指定が間違っています: %s`, username))
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageUserIncorrect))
 		} else {
-			queue = append(queue, fmt.Sprintf(`ユーザをホワイトリストから削除しました: %s`, username))
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageWhitelistRemove, username))
 		}
 	}
 	return queue, nil
@@ -71,7 +70,7 @@ func (p PluginWhitelist) list() ([]interface{}, error) {
 	data, err := p.SharedMem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		p.Logger.Error(err)
-		queue = append(queue, `Internal Error`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageError))
 		return nil, err
 	}
 
@@ -81,7 +80,7 @@ func (p PluginWhitelist) list() ([]interface{}, error) {
 		usernames = append(usernames, username)
 	}
 	if usernames == nil {
-		queue = append(queue, `ユーザが存在しません`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageNoUserExists))
 		return queue, nil
 	}
 	queue = append(queue, usernames)

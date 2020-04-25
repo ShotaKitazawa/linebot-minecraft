@@ -2,6 +2,10 @@ package domain
 
 import "github.com/line/line-bot-sdk-go/linebot"
 
+var (
+	MinecraftHostname = ``
+)
+
 type LineClientConfig struct {
 	Client   *linebot.Client
 	GroupIDs []string

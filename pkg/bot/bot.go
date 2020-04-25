@@ -7,8 +7,13 @@ import (
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot/command"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
+)
+
+const (
+	commandPrefix = `/`
 )
 
 type PluginConfig struct {
@@ -50,7 +55,7 @@ func New(m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *Plugi
 func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	if !strings.HasPrefix(input.Messages[0], "/") {
+	if !strings.HasPrefix(input.Messages[0], commandPrefix) {
 		return nil
 	}
 
@@ -64,12 +69,12 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 		}
 	}
 
-	queue = append(queue, `no such command`)
+	queue = append(queue, i18n.T.Sprintf(i18n.MessageNoSuchCommand))
 	return &botplug.MessageOutput{Queue: queue}
 }
 
 func (pc *PluginConfig) ReceiveMemberJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
-	queue = append(queue, MessageMemberJoined)
+	queue = append(queue, i18n.T.Sprintf(i18n.MessageMemberJoined))
 	return &botplug.MessageOutput{Queue: queue}
 }

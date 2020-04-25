@@ -1,10 +1,10 @@
 package command
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/sirupsen/logrus"
 )
@@ -25,15 +25,15 @@ func (p PluginTitle) ReceiveMessage(input *botplug.MessageInput) *botplug.Messag
 	destUsers, err := p.Rcon.Title(strings.Join(input.Messages[1:], " "))
 	if err != nil {
 		p.Logger.Error(err)
-		queue = append(queue, "Internal Error")
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageError))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 	if len(destUsers) == 0 {
-		queue = append(queue, `ログイン中のユーザは存在しません`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageNoLoginUserExists))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 	for _, user := range destUsers {
-		queue = append(queue, fmt.Sprintf(`%s に送信しました`, user))
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageSentMessage, user))
 	}
 
 	return &botplug.MessageOutput{Queue: queue}

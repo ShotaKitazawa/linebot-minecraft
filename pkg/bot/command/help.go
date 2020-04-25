@@ -2,6 +2,7 @@ package command
 
 import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,26 +17,7 @@ func (p PluginHelp) CommandName() string {
 func (p PluginHelp) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	msg := `
-/help
-ヘルプメッセージを表示します
-
-/list
-ログイン中のユーザ一覧を表示します
-
-/title hoge
-Minecraftのゲーム画面に hoge と表示されます
-
-/whitelist list
-ホワイトリストを表示します
-
-/whitelist add hoge
-ユーザ hoge をホワイトリストに追加します
-
-/whitelist delete hoge
-ユーザ hoge をホワイトリストから削除します
-`
-	queue = append(queue, msg)
+	queue = append(queue, i18n.T.Sprintf(i18n.MessageHelp))
 
 	return &botplug.MessageOutput{Queue: queue}
 }
