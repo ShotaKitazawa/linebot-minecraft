@@ -1,26 +1,18 @@
 package botplug
 
-import (
-	"time"
-)
+import "github.com/sirupsen/logrus"
 
-type BotPlugin interface {
-	ReceiveMessageEntry(*MessageInput) *MessageOutput
-	ReceiveMemberJoinEntry(*MessageInput) *MessageOutput
+type Config struct {
+	ID     uint
+	Logger *logrus.Logger
 }
 
-type MessageInput struct {
-	Timestamp time.Time
-	Source    *Source
-	Messages  []string
-}
+var id = 0
 
-type Source struct {
-	Type    string
-	UserID  string
-	GroupID string
-}
-
-type MessageOutput struct {
-	Queue []interface{}
+func New(logger *logrus.Logger) Config {
+	id++
+	return Config{
+		ID:     uint(id),
+		Logger: logger,
+	}
 }

@@ -4,9 +4,9 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
@@ -18,7 +18,7 @@ const (
 )
 
 type Eventer struct {
-	domain.LineClient
+	botplug.BotPluginSender
 
 	MinecraftHostname string
 	sharedMem         sharedmem.SharedMem
@@ -26,16 +26,9 @@ type Eventer struct {
 	Logger            *logrus.Logger
 }
 
-func New(minecraftHostname string, lineConfig domain.LineConfig, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
-	client, err := linebot.New(lineConfig.ChannelSecret, lineConfig.ChannelToken)
-	if err != nil {
-		return nil, err
-	}
+func New(minecraftHostname string, sender botplug.BotPluginSender, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
 	return &Eventer{
-		LineClient: domain.LineClient{
-			GroupIDs: lineConfig.GroupIDs,
-			Client:   client,
-		},
+		BotPluginSender:   sender,
 		MinecraftHostname: minecraftHostname,
 		sharedMem:         m,
 		rcon:              rcon,
@@ -131,19 +124,11 @@ func (e *Eventer) job() error {
 	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
 	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
 	if loggingInUsernameSet.Cardinality() != 0 {
-		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice()))).Do(); err != nil {
-				e.Logger.Error(`failed to push notification: `, err)
-			}
-		}
+		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice()))
 	}
 	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
 	if loggingOutUsernameSet.Cardinality() != 0 {
-		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice()))).Do(); err != nil {
-				e.Logger.Error(`failed to push notification: `, err)
-			}
-		}
+		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice()))
 	}
 
 	// write to sharedMem

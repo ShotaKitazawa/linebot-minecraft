@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
@@ -122,20 +120,16 @@ func main() {
 	// args parse
 	args := newArgsConfig()
 
-	// set LINE config
-	lineConfig := domain.LineConfig{
-		ChannelSecret: args.channelSecret,
-		ChannelToken:  args.channelToken,
-		GroupIDs:      strings.Split(args.groupIDs, ","),
-	}
-
 	// set logger
 	logger = newLogger(args.loglevel)
 
+	// set LINE config
+	botReceiver, botSender, err := line.New(logger, args.channelSecret, args.channelToken, args.groupIDs)
+
+	// run sharedMem & get sharedMem instance
 	m := func(sharedmemMode string) sharedmem.SharedMem {
 		switch sharedmemMode {
 		case "local":
-			// run sharedMem & get sharedMem instance
 			m, err := localmem.New(logger)
 			if err != nil {
 				panic(err)
@@ -159,7 +153,7 @@ func main() {
 	}
 
 	// run eventer
-	eventer, err := eventer.New(args.minecraftHostname, lineConfig, m, rcon, logger)
+	eventer, err := eventer.New(args.minecraftHostname, botSender, m, rcon, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -174,10 +168,9 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	// run bot
-	handler, err := line.NewHandler(&line.Config{
-		LineConfig: lineConfig,
-		Plugin:     bot.New(args.minecraftHostname, m, rcon, logger),
-	})
+	handler, err := botReceiver.WithPlugin(
+		bot.New(args.minecraftHostname, m, rcon, logger),
+	).NewHandler()
 	if err != nil {
 		panic(err)
 	}
