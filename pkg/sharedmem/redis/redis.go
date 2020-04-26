@@ -39,7 +39,12 @@ func (m *SharedMem) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
 	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
 	if err != nil {
 		m.logger.Warn(err)
-		return nil, m.reconnect()
+		if err := m.reconnect(); err != nil {
+			m.logger.Error(err)
+		} else {
+			m.logger.Info(`reconnect to Redis`)
+		}
+		return nil, err
 	} else if data == nil {
 		return nil, nil
 	}
@@ -66,7 +71,12 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 			_, err = m.Conn.Do("SET", "entity", data)
 			if err != nil {
 				m.logger.Warn(err)
-				return m.reconnect()
+				if err := m.reconnect(); err != nil {
+					m.logger.Error(err)
+				} else {
+					m.logger.Info(`reconnect to Redis`)
+				}
+				return err
 			}
 		}
 	}
