@@ -50,16 +50,17 @@ func newLogger(loglevel string) *logrus.Logger {
 }
 
 type argsConfig struct {
-	loglevel      string
-	channelSecret string
-	channelToken  string
-	groupIDs      string
-	sharedmemMode string
-	redisHost     string
-	redisPort     int
-	rconHost      string
-	rconPort      int
-	rconPassword  string
+	loglevel          string
+	channelSecret     string
+	channelToken      string
+	groupIDs          string
+	sharedmemMode     string
+	minecraftHostname string
+	redisHost         string
+	redisPort         int
+	rconHost          string
+	rconPort          int
+	rconPassword      string
 }
 
 func newArgsConfig() *argsConfig {
@@ -71,6 +72,7 @@ func newArgsConfig() *argsConfig {
 	fl.StringVar(&cfg.channelToken, "line-channel-token", "", "LINE Bot's Channel Token")
 	fl.StringVar(&cfg.groupIDs, "line-group-id", "", "specified LINE Group ID, send push message to this Group")
 	fl.StringVar(&cfg.sharedmemMode, "sharedmem-mode", "local", `using Shared Memory ("local" or "redis")`)
+	fl.StringVar(&cfg.minecraftHostname, "minecraft-hostname", "", `Minecraft Hostname`)
 	fl.StringVar(&cfg.redisHost, "redis-host", "127.0.0.1", "Redis Host (enabled when sharedmem-mode=redis)")
 	fl.IntVar(&cfg.redisPort, "redis-port", 6379, "Redis Port (enabled when sharedmem-mode=redis)")
 	fl.StringVar(&cfg.rconHost, "rcon-host", "", "RCON Host")
@@ -149,7 +151,7 @@ func main() {
 	}
 
 	// run eventer
-	eventer, err := eventer.New(args.groupIDs, args.channelSecret, args.channelToken, m, rcon, logger)
+	eventer, err := eventer.New(args.minecraftHostname, args.groupIDs, args.channelSecret, args.channelToken, m, rcon, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -168,7 +170,7 @@ func main() {
 		GroupIDs:      strings.Split(args.groupIDs, ","),
 		ChannelSecret: args.channelSecret,
 		ChannelToken:  args.channelToken,
-		Plugin:        bot.New(m, rcon, logger),
+		Plugin:        bot.New(args.minecraftHostname, m, rcon, logger),
 	})
 	if err != nil {
 		panic(err)

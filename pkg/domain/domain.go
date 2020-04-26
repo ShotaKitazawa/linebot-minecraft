@@ -2,14 +2,21 @@ package domain
 
 import "github.com/line/line-bot-sdk-go/linebot"
 
-var (
-	MinecraftHostname = ``
-)
-
 type LineClientConfig struct {
 	Client   *linebot.Client
 	GroupIDs []string
 }
+
+/* TODO
+type SlackClientConfig struct {
+	Client   *linebot.Client
+	GroupIDs []string
+}
+type DiscordClientConfig struct {
+	Client   *linebot.Client
+	GroupIDs []string
+}
+*/
 
 type Entity struct {
 	//ログインしたことのあるすべてのユーザ

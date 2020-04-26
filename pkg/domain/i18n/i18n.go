@@ -18,7 +18,7 @@ var (
 	MessageError             = `MessageError`
 	MessageHelp              = `MessageHelp`
 	MessageInvalidArguments  = `MessageInvalidArguments`
-	MessageMemberJoined      = `MessageMemberJoined`
+	MessageMemberJoined      = `MessageMemberJoined: %s`
 	MessageNoLoginUserExists = `MessageNoLoginUserExists`
 	MessageNoSuchCommand     = `MessageNoSuchCommand`
 	MessageNoUserExists      = `MessageNoUserExists`

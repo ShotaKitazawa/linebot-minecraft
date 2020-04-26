@@ -1,4 +1,4 @@
-# [WIP] Architecture
+# Architecture
 
 ![](./images/architecture.png)
 

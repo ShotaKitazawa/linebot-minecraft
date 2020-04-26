@@ -17,17 +17,19 @@ const (
 )
 
 type PluginConfig struct {
-	SharedMem sharedmem.SharedMem
-	Rcon      *rcon.Client
-	Logger    *logrus.Logger
-	Plugins   []PluginInterface
+	MinecraftHostname string
+	SharedMem         sharedmem.SharedMem
+	Rcon              *rcon.Client
+	Logger            *logrus.Logger
+	Plugins           []PluginInterface
 }
 
-func New(m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
+func New(minecraftHostname string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) *PluginConfig {
 	return &PluginConfig{
-		SharedMem: m,
-		Rcon:      rcon,
-		Logger:    logger,
+		MinecraftHostname: minecraftHostname,
+		SharedMem:         m,
+		Rcon:              rcon,
+		Logger:            logger,
 		Plugins: []PluginInterface{
 			command.PluginList{
 				SharedMem: m,
@@ -75,6 +77,6 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 
 func (pc *PluginConfig) ReceiveMemberJoinEntry(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
-	queue = append(queue, i18n.T.Sprintf(i18n.MessageMemberJoined))
+	queue = append(queue, i18n.T.Sprintf(i18n.MessageMemberJoined, pc.MinecraftHostname))
 	return &botplug.MessageOutput{Queue: queue}
 }

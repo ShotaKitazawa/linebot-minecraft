@@ -1,9 +1,6 @@
 package i18n
 
 import (
-	"fmt"
-
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -36,11 +33,11 @@ delete user "hoge" from whitelist
 
 	message.SetString(language.English, MessageInvalidArguments, `Invalid arguments`)
 
-	message.SetString(language.English, MessageMemberJoined, fmt.Sprintf(`
+	message.SetString(language.English, MessageMemberJoined, `
 Welcome! Please set up this process
 1. chat "/whitelist add ${MINECRAFT_ACCOUNT_ID}" in this talk-room
 2. launch Minecraft & enter server to "%s"
-`, domain.MinecraftHostname))
+`)
 
 	message.SetString(language.English, MessageNoLoginUserExists, `No login user exists`)
 

@@ -1,11 +1,9 @@
 package i18n
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -42,15 +40,15 @@ Minecraftのゲーム画面に hoge と表示されます
 
 	message.SetString(language.Japanese, MessageInvalidArguments, `引数が間違っています`)
 
-	message.SetString(language.Japanese, MessageMemberJoined, fmt.Sprintf(`
+	message.SetString(language.Japanese, MessageMemberJoined, `
 ようこそ！ 以下の手順でセットアップをしてください。
 1. このトークルームで "/whitelist add ${MINECRAFT_ACCOUNT_ID}" と発言
 2. Minecraft を起動して、"%s" サーバに参加
-`, domain.MinecraftHostname))
+`)
 
 	message.SetString(language.Japanese, MessageNoLoginUserExists, `ログイン中のユーザは存在しません`)
 
-	message.SetString(language.English, MessageNoSuchCommand, `コマンドが存在しません`)
+	message.SetString(language.Japanese, MessageNoSuchCommand, `コマンドが存在しません`)
 
 	message.SetString(language.Japanese, MessageNoUserExists, `ユーザが存在しません`)
 
