@@ -6,10 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	namespace = "minecraft"
-)
-
 type Collector struct {
 	describes []*prometheus.Desc
 	sharedmem sharedmem.SharedMem
@@ -30,6 +26,30 @@ func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
 			[]string{"username"},
 			nil,
 		),
+		prometheus.NewDesc(
+			"minecraft_pos_x_gauge",
+			"Minecraft User's Position of X axis",
+			[]string{"username"},
+			nil,
+		),
+		prometheus.NewDesc(
+			"minecraft_pos_y_gauge",
+			"Minecraft User's Position of Y axis",
+			[]string{"username"},
+			nil,
+		),
+		prometheus.NewDesc(
+			"minecraft_pos_z_gauge",
+			"Minecraft User's Position of Z axis",
+			[]string{"username"},
+			nil,
+		),
+		prometheus.NewDesc(
+			"minecraft_xp_level_gauge",
+			"Minecraft User's Xp Level",
+			[]string{"username"},
+			nil,
+		),
 	}
 
 	return Collector{
@@ -42,6 +62,10 @@ func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
 func (c Collector) Collect(ch chan<- prometheus.Metric) {
 	describeUserInfo := c.describes[0]
 	describeHealthGauge := c.describes[1]
+	describePosXGauge := c.describes[2]
+	describePosYGauge := c.describes[3]
+	describePosZGauge := c.describes[4]
+	describeXpLevelGauge := c.describes[5]
 
 	data, err := c.sharedmem.SyncReadEntityFromSharedMem()
 	if err != nil {
@@ -70,6 +94,30 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 			describeHealthGauge,
 			prometheus.GaugeValue,
 			float64(user.Health),
+			user.Name,
+		)
+		ch <- prometheus.MustNewConstMetric(
+			describePosXGauge,
+			prometheus.GaugeValue,
+			float64(user.Position.X),
+			user.Name,
+		)
+		ch <- prometheus.MustNewConstMetric(
+			describePosYGauge,
+			prometheus.GaugeValue,
+			float64(user.Position.Y),
+			user.Name,
+		)
+		ch <- prometheus.MustNewConstMetric(
+			describePosZGauge,
+			prometheus.GaugeValue,
+			float64(user.Position.Z),
+			user.Name,
+		)
+		ch <- prometheus.MustNewConstMetric(
+			describeXpLevelGauge,
+			prometheus.GaugeValue,
+			float64(user.XpLevel),
 			user.Name,
 		)
 	}
