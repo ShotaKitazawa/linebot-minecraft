@@ -2,6 +2,7 @@ package command
 
 import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +23,7 @@ func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.Message
 	data, err := p.SharedMem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		p.Logger.Error(err)
-		queue = append(queue, "Internal Error")
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageError))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 
@@ -32,7 +33,7 @@ func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.Message
 		loginUsernames = append(loginUsernames, user.Name)
 	}
 	if loginUsernames == nil {
-		queue = append(queue, `ユーザが存在しません`)
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageNoUserExists))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 	queue = append(queue, loginUsernames)

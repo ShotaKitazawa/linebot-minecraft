@@ -7,6 +7,17 @@ type LineClientConfig struct {
 	GroupIDs []string
 }
 
+/* TODO
+type SlackClientConfig struct {
+	Client   *linebot.Client
+	GroupIDs []string
+}
+type DiscordClientConfig struct {
+	Client   *linebot.Client
+	GroupIDs []string
+}
+*/
+
 type Entity struct {
 	//ログインしたことのあるすべてのユーザ
 	AllUsers []User

@@ -1,7 +1,6 @@
 package eventer
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain/i18n"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
@@ -21,12 +21,13 @@ const (
 type Eventer struct {
 	domain.LineClientConfig
 
-	sharedMem sharedmem.SharedMem
-	rcon      *rcon.Client
-	Logger    *logrus.Logger
+	MinecraftHostname string
+	sharedMem         sharedmem.SharedMem
+	rcon              *rcon.Client
+	Logger            *logrus.Logger
 }
 
-func New(groupIDs, channelSecret, channelToken string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
+func New(minecraftHostname, groupIDs, channelSecret, channelToken string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
 	client, err := linebot.New(channelSecret, channelToken)
 	if err != nil {
 		return nil, err
@@ -36,9 +37,10 @@ func New(groupIDs, channelSecret, channelToken string, m sharedmem.SharedMem, rc
 			GroupIDs: strings.Split(groupIDs, ","),
 			Client:   client,
 		},
-		sharedMem: m,
-		rcon:      rcon,
-		Logger:    logger,
+		MinecraftHostname: minecraftHostname,
+		sharedMem:         m,
+		rcon:              rcon,
+		Logger:            logger,
 	}, nil
 }
 
@@ -131,7 +133,7 @@ func (e *Eventer) job() error {
 	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
 	if loggingInUsernameSet.Cardinality() != 0 {
 		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログインしました: %v`, loggingInUsernameSet.ToSlice()))).Do(); err != nil {
+			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice()))).Do(); err != nil {
 				e.Logger.Error(`failed to push notification: `, err)
 			}
 		}
@@ -139,7 +141,7 @@ func (e *Eventer) job() error {
 	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
 	if loggingOutUsernameSet.Cardinality() != 0 {
 		for _, groupID := range e.GroupIDs {
-			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(fmt.Sprintf(`ユーザがログアウトしました: %v`, loggingOutUsernameSet.ToSlice()))).Do(); err != nil {
+			if _, err := e.Client.PushMessage(groupID, linebot.NewTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice()))).Do(); err != nil {
 				e.Logger.Error(`failed to push notification: `, err)
 			}
 		}
