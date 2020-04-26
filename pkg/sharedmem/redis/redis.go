@@ -14,11 +14,13 @@ type SharedMem struct {
 	sendStream    chan<- domain.Entity
 	receiveStream <-chan domain.Entity
 	Conn          redis.Conn
+	redisHostname string
 }
 
 func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 	stream := make(chan domain.Entity)
-	c, err := redis.Dial("tcp", addr+":"+strconv.Itoa(port))
+	redisHostname := addr + ":" + strconv.Itoa(port)
+	c, err := redis.Dial("tcp", redisHostname)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +29,7 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 		sendStream:    stream,
 		receiveStream: stream,
 		Conn:          c,
+		redisHostname: redisHostname,
 	}
 	go m.receiveFromChannelAndWriteSharedMem()
 	return m, nil
@@ -35,7 +38,8 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 func (m *SharedMem) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
 	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
 	if err != nil {
-		return nil, err
+		m.logger.Warn(err)
+		return nil, m.reconnect()
 	} else if data == nil {
 		return nil, nil
 	}
@@ -59,8 +63,21 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 			if err != nil {
 				return err
 			}
-			m.Conn.Do("SET", "entity", data)
+			_, err = m.Conn.Do("SET", "entity", data)
+			if err != nil {
+				m.logger.Warn(err)
+				return m.reconnect()
+			}
 		}
 	}
 	// return nil
+}
+
+func (m *SharedMem) reconnect() error {
+	c, err := redis.Dial("tcp", m.redisHostname)
+	if err != nil {
+		return err
+	}
+	m.Conn = c
+	return nil
 }
