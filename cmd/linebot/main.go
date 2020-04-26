@@ -14,6 +14,7 @@ import (
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/bot"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug/line"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/eventer"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/exporter"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/rcon"
@@ -121,6 +122,13 @@ func main() {
 	// args parse
 	args := newArgsConfig()
 
+	// set LINE config
+	lineConfig := domain.LineConfig{
+		ChannelSecret: args.channelSecret,
+		ChannelToken:  args.channelToken,
+		GroupIDs:      strings.Split(args.groupIDs, ","),
+	}
+
 	// set logger
 	logger = newLogger(args.loglevel)
 
@@ -151,7 +159,7 @@ func main() {
 	}
 
 	// run eventer
-	eventer, err := eventer.New(args.minecraftHostname, args.groupIDs, args.channelSecret, args.channelToken, m, rcon, logger)
+	eventer, err := eventer.New(args.minecraftHostname, lineConfig, m, rcon, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -167,10 +175,8 @@ func main() {
 
 	// run bot
 	handler, err := line.NewHandler(&line.Config{
-		GroupIDs:      strings.Split(args.groupIDs, ","),
-		ChannelSecret: args.channelSecret,
-		ChannelToken:  args.channelToken,
-		Plugin:        bot.New(args.minecraftHostname, m, rcon, logger),
+		LineConfig: lineConfig,
+		Plugin:     bot.New(args.minecraftHostname, m, rcon, logger),
 	})
 	if err != nil {
 		panic(err)

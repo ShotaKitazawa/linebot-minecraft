@@ -9,13 +9,12 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/botplug"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 )
 
 type Config struct {
-	GroupIDs      []string
-	ChannelSecret string
-	ChannelToken  string
-	Plugin        botplug.BotPlugin
+	domain.LineConfig
+	Plugin botplug.BotPlugin
 }
 
 func NewHandler(config *Config) (*httphandler.WebhookHandler, error) {

@@ -1,7 +1,6 @@
 package eventer
 
 import (
-	"strings"
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
@@ -19,7 +18,7 @@ const (
 )
 
 type Eventer struct {
-	domain.LineClientConfig
+	domain.LineClient
 
 	MinecraftHostname string
 	sharedMem         sharedmem.SharedMem
@@ -27,14 +26,14 @@ type Eventer struct {
 	Logger            *logrus.Logger
 }
 
-func New(minecraftHostname, groupIDs, channelSecret, channelToken string, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
-	client, err := linebot.New(channelSecret, channelToken)
+func New(minecraftHostname string, lineConfig domain.LineConfig, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
+	client, err := linebot.New(lineConfig.ChannelSecret, lineConfig.ChannelToken)
 	if err != nil {
 		return nil, err
 	}
 	return &Eventer{
-		LineClientConfig: domain.LineClientConfig{
-			GroupIDs: strings.Split(groupIDs, ","),
+		LineClient: domain.LineClient{
+			GroupIDs: lineConfig.GroupIDs,
 			Client:   client,
 		},
 		MinecraftHostname: minecraftHostname,
