@@ -22,11 +22,11 @@ type Eventer struct {
 
 	MinecraftHostname string
 	sharedMem         sharedmem.SharedMem
-	rcon              *rcon.Client
+	rcon              rcon.RconClient
 	Logger            *logrus.Logger
 }
 
-func New(minecraftHostname string, lineConfig domain.LineConfig, m sharedmem.SharedMem, rcon *rcon.Client, logger *logrus.Logger) (*Eventer, error) {
+func New(minecraftHostname string, lineConfig domain.LineConfig, m sharedmem.SharedMem, rcon rcon.RconClient, logger *logrus.Logger) (*Eventer, error) {
 	client, err := linebot.New(lineConfig.ChannelSecret, lineConfig.ChannelToken)
 	if err != nil {
 		return nil, err
