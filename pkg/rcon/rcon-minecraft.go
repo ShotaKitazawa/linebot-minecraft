@@ -76,7 +76,7 @@ func (c Client) List() ([]string, error) {
 	if err != nil {
 		return nil, err
 	} else if result == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 	return strings.Split(result[0], ", "), nil
 }
@@ -115,11 +115,12 @@ func (c Client) WhitelistList() ([]string, error) {
 	if err != nil {
 		return nil, err
 	} else if result == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 	return strings.Split(result[0], ", "), nil
 }
 
+// TODO: return nil,nil を辞める
 func (c Client) DataGetEntity(username string) (*User, error) {
 	array, err := c.command(Command{
 		command:            fmt.Sprintf(`data get entity %s Health`, username),
@@ -195,7 +196,7 @@ func (c Client) Title(msg string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	} else if result == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 	return strings.Split(result[0], ", "), nil
 }
