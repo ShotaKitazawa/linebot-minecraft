@@ -72,24 +72,24 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 		c.Logger.Warn(err)
 		return
 	}
-	for _, user := range data.LogoutUsers {
-		ch <- prometheus.MustNewConstMetric(
-			describeUserInfo,
-			prometheus.GaugeValue,
-			0,
-			user.Name,
-		)
-	}
-	for _, user := range data.LoginUsers {
-		ch <- prometheus.MustNewConstMetric(
-			describeUserInfo,
-			prometheus.GaugeValue,
-			1,
-			user.Name,
-		)
-	}
 
 	for _, user := range data.AllUsers {
+
+		// check if user log in
+		userIsLoggingin := 0
+		for _, loginUser := range data.LoginUsers {
+			if user.Name == loginUser.Name {
+				userIsLoggingin = 1
+			}
+		}
+
+		// metrics
+		ch <- prometheus.MustNewConstMetric(
+			describeUserInfo,
+			prometheus.GaugeValue,
+			float64(userIsLoggingin),
+			user.Name,
+		)
 		ch <- prometheus.MustNewConstMetric(
 			describeHealthGauge,
 			prometheus.GaugeValue,

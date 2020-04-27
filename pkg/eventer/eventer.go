@@ -102,6 +102,19 @@ func (e *Eventer) job() error {
 	}
 	for _, previousLoginUser := range previousData.LoginUsers {
 		previousLoginUserSet.Add(previousLoginUser.Name)
+
+		/*
+			// check if user log out
+			userIsLogOut := true
+			for _, currentLoginUser := range currentData.LoginUsers {
+				if previousLoginUser.Name == currentLoginUser.Name{
+					userIsLogOut = false
+				}
+			}
+			if userIsLogOut{
+				currentData.AllUsers = append(currentData.AllUsers, previousLoginUser)
+			}
+		*/
 	}
 
 	// store domain.AllUsers, LogoutUsers
@@ -117,7 +130,6 @@ func (e *Eventer) job() error {
 		}
 		if !flag {
 			currentData.AllUsers = append(currentData.AllUsers, previousUser)
-			currentData.LogoutUsers = append(currentData.LogoutUsers, previousUser)
 		}
 	}
 
