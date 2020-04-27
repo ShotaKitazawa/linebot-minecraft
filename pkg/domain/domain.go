@@ -29,8 +29,6 @@ type Entity struct {
 	AllUsers []User
 	//ログインしてるユーザ
 	LoginUsers []User
-	//ログインしてないユーザ
-	LogoutUsers []User
 	//whitelistなユーザ名
 	WhitelistUsernames []string
 }
