@@ -10,5 +10,5 @@ require (
 	github.com/prometheus/client_golang v1.5.1
 	github.com/seeruk/minecraft-rcon v0.0.0-20190221212056-6ab996d90449
 	github.com/sirupsen/logrus v1.5.0
-	golang.org/x/text v0.3.0
+	golang.org/x/text v0.3.2
 )
