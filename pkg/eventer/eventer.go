@@ -59,83 +59,21 @@ func (e *Eventer) cronjob() error {
 
 func (e *Eventer) job() error {
 	var err error
-
-	// get Minecraft metrics by RCON
-	currentData, err := e.getMetricsUsingRCON()
-	if err != nil {
-		return err
-	}
-
-	// create currentLoginUsernameSet
-	currentLoginUsernameSet := mapset.NewSet()
-	for _, loginUser := range currentData.LoginUsers {
-		currentLoginUsernameSet.Add(loginUser.Name)
-	}
-
-	// get logged in users from SharedMem
-	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
-	if err != nil {
-		// write to sharedMem & return
-		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
-	}
-
-	// create previousLoginUsernameSet
-	previousLoginUsernameSet := mapset.NewSet()
-	for _, previousLoginUser := range previousData.LoginUsers {
-		previousLoginUsernameSet.Add(previousLoginUser.Name)
-	}
-
-	// store to currentData.AllUsers
-	for _, currentUser := range currentData.LoginUsers {
-		currentData.AllUsers = append(currentData.AllUsers, currentUser)
-	}
-	for _, previousUser := range previousData.AllUsers {
-		var flag bool
-		for _, currentUser := range currentData.LoginUsers {
-			if previousUser.Name == currentUser.Name {
-				flag = true
-			}
-		}
-		if !flag {
-			currentData.AllUsers = append(currentData.AllUsers, previousUser)
-		}
-	}
-
-	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
-	loggingInUsernameSet := currentLoginUsernameSet.Difference(previousLoginUsernameSet)
-	if loggingInUsernameSet.Cardinality() != 0 {
-		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice())); err != nil {
-			return err
-		}
-	}
-	loggingOutUsernameSet := previousLoginUsernameSet.Difference(currentLoginUsernameSet)
-	if loggingOutUsernameSet.Cardinality() != 0 {
-		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice())); err != nil {
-			return err
-		}
-	}
-
-	// write to sharedMem
-	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
-
-	return nil
-}
-
-func (e *Eventer) getMetricsUsingRCON() (domain.Entity, error) {
 	var currentData domain.Entity
 
+	// get Minecraft metrics by RCON
+	currentLoginUserSet := mapset.NewSet()
 	currentLoginUsernames, err := e.rcon.List()
 	if err != nil {
-		return domain.Entity{}, err
+		return err
 	}
 	for _, username := range currentLoginUsernames {
 		userData, err := e.rcon.DataGetEntity(username)
 		if err != nil {
-			e.Logger.Warn(`userData is nil`)
-			return domain.Entity{}, err
-			// TODO: e.rcon.DataGetEntity の return nil, nil をやめる
+			return err
 		} else if userData == nil {
-			return domain.Entity{}, nil
+			e.Logger.Warn(`userData is nil`)
+			return nil
 		}
 		currentLoginUser := domain.User{
 			Name:    username,
@@ -148,10 +86,53 @@ func (e *Eventer) getMetricsUsingRCON() (domain.Entity, error) {
 			},
 		}
 		currentData.LoginUsers = append(currentData.LoginUsers, currentLoginUser)
+		currentLoginUserSet.Add(currentLoginUser.Name)
 	}
 	currentData.WhitelistUsernames, err = e.rcon.WhitelistList()
 	if err != nil {
-		return domain.Entity{}, err
+		return err
 	}
-	return currentData, nil
+
+	// get logged in users from SharedMem
+	previousLoginUserSet := mapset.NewSet()
+	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
+	if err != nil {
+		// write to sharedMem & return
+		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+	}
+	for _, previousLoginUser := range previousData.LoginUsers {
+		previousLoginUserSet.Add(previousLoginUser.Name)
+	}
+
+	// store domain.AllUsers, LogoutUsers
+	for _, currentUser := range currentData.LoginUsers {
+		currentData.AllUsers = append(currentData.AllUsers, currentUser)
+	}
+	for _, previousUser := range previousData.AllUsers {
+		var flag bool
+		for _, currentUser := range currentData.LoginUsers {
+			if previousUser.Name == currentUser.Name {
+				flag = true
+			}
+		}
+		if !flag {
+			currentData.AllUsers = append(currentData.AllUsers, previousUser)
+			currentData.LogoutUsers = append(currentData.LogoutUsers, previousUser)
+		}
+	}
+
+	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
+	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
+	if loggingInUsernameSet.Cardinality() != 0 {
+		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice()))
+	}
+	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
+	if loggingOutUsernameSet.Cardinality() != 0 {
+		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice()))
+	}
+
+	// write to sharedMem
+	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
+
+	return nil
 }
