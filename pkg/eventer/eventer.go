@@ -59,52 +59,33 @@ func (e *Eventer) cronjob() error {
 
 func (e *Eventer) job() error {
 	var err error
-	var currentData domain.Entity
 
 	// get Minecraft metrics by RCON
-	currentLoginUserSet := mapset.NewSet()
-	currentLoginUsernames, err := e.rcon.List()
+	currentData, err := e.getMetricsUsingRCON()
 	if err != nil {
 		return err
 	}
-	for _, username := range currentLoginUsernames {
-		userData, err := e.rcon.DataGetEntity(username)
-		if err != nil {
-			return err
-		} else if userData == nil {
-			e.Logger.Warn(`userData is nil`)
-			return nil
-		}
-		currentLoginUser := domain.User{
-			Name:    username,
-			Health:  userData.Health,
-			XpLevel: userData.XpLevel,
-			Position: domain.Position{
-				X: userData.X,
-				Y: userData.Y,
-				Z: userData.Z,
-			},
-		}
-		currentData.LoginUsers = append(currentData.LoginUsers, currentLoginUser)
-		currentLoginUserSet.Add(currentLoginUser.Name)
-	}
-	currentData.WhitelistUsernames, err = e.rcon.WhitelistList()
-	if err != nil {
-		return err
+
+	// create currentLoginUsernameSet
+	currentLoginUsernameSet := mapset.NewSet()
+	for _, loginUser := range currentData.LoginUsers {
+		currentLoginUsernameSet.Add(loginUser.Name)
 	}
 
 	// get logged in users from SharedMem
-	previousLoginUserSet := mapset.NewSet()
 	previousData, err := e.sharedMem.SyncReadEntityFromSharedMem()
 	if err != nil {
 		// write to sharedMem & return
 		return e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
 	}
+
+	// create previousLoginUsernameSet
+	previousLoginUsernameSet := mapset.NewSet()
 	for _, previousLoginUser := range previousData.LoginUsers {
-		previousLoginUserSet.Add(previousLoginUser.Name)
+		previousLoginUsernameSet.Add(previousLoginUser.Name)
 	}
 
-	// store domain.AllUsers, LogoutUsers
+	// store to currentData.AllUsers
 	for _, currentUser := range currentData.LoginUsers {
 		currentData.AllUsers = append(currentData.AllUsers, currentUser)
 	}
@@ -117,22 +98,60 @@ func (e *Eventer) job() error {
 		}
 		if !flag {
 			currentData.AllUsers = append(currentData.AllUsers, previousUser)
-			currentData.LogoutUsers = append(currentData.LogoutUsers, previousUser)
 		}
 	}
 
 	// send to LINE (PUSH notification) if d.LoginUsers != sharedmem.Domain.LoginUsers
-	loggingInUsernameSet := currentLoginUserSet.Difference(previousLoginUserSet)
+	loggingInUsernameSet := currentLoginUsernameSet.Difference(previousLoginUsernameSet)
 	if loggingInUsernameSet.Cardinality() != 0 {
-		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice()))
+		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogin, loggingInUsernameSet.ToSlice())); err != nil {
+			return err
+		}
 	}
-	loggingOutUsernameSet := previousLoginUserSet.Difference(currentLoginUserSet)
+	loggingOutUsernameSet := previousLoginUsernameSet.Difference(currentLoginUsernameSet)
 	if loggingOutUsernameSet.Cardinality() != 0 {
-		e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice()))
+		if err := e.BotPluginSender.SendTextMessage(i18n.T.Sprintf(i18n.MessageUsersLogout, loggingOutUsernameSet.ToSlice())); err != nil {
+			return err
+		}
 	}
 
 	// write to sharedMem
 	e.sharedMem.AsyncWriteEntityToSharedMem(currentData)
 
 	return nil
+}
+
+func (e *Eventer) getMetricsUsingRCON() (domain.Entity, error) {
+	var currentData domain.Entity
+
+	currentLoginUsernames, err := e.rcon.List()
+	if err != nil {
+		return domain.Entity{}, err
+	}
+	for _, username := range currentLoginUsernames {
+		userData, err := e.rcon.DataGetEntity(username)
+		if err != nil {
+			e.Logger.Warn(`userData is nil`)
+			return domain.Entity{}, err
+			// TODO: e.rcon.DataGetEntity の return nil, nil をやめる
+		} else if userData == nil {
+			return domain.Entity{}, nil
+		}
+		currentLoginUser := domain.User{
+			Name:    username,
+			Health:  userData.Health,
+			XpLevel: userData.XpLevel,
+			Position: domain.Position{
+				X: userData.X,
+				Y: userData.Y,
+				Z: userData.Z,
+			},
+		}
+		currentData.LoginUsers = append(currentData.LoginUsers, currentLoginUser)
+	}
+	currentData.WhitelistUsernames, err = e.rcon.WhitelistList()
+	if err != nil {
+		return domain.Entity{}, err
+	}
+	return currentData, nil
 }
