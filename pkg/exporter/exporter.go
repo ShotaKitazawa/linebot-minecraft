@@ -7,13 +7,13 @@ import (
 )
 
 type Collector struct {
-	describes []*prometheus.Desc
-	sharedmem sharedmem.SharedMem
-	Logger    *logrus.Logger
+	descriptors []*prometheus.Desc
+	sharedmem   sharedmem.SharedMem
+	Logger      *logrus.Logger
 }
 
 func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
-	describes := []*prometheus.Desc{
+	descriptors := []*prometheus.Desc{
 		prometheus.NewDesc(
 			"minecraft_user_info",
 			"Minecraft Login Users",
@@ -53,19 +53,19 @@ func New(m sharedmem.SharedMem, l *logrus.Logger) (Collector, error) {
 	}
 
 	return Collector{
-		describes: describes,
-		sharedmem: m,
-		Logger:    l,
+		descriptors: descriptors,
+		sharedmem:   m,
+		Logger:      l,
 	}, nil
 }
 
 func (c Collector) Collect(ch chan<- prometheus.Metric) {
-	describeUserInfo := c.describes[0]
-	describeHealthGauge := c.describes[1]
-	describePosXGauge := c.describes[2]
-	describePosYGauge := c.describes[3]
-	describePosZGauge := c.describes[4]
-	describeXpLevelGauge := c.describes[5]
+	describeUserInfo := c.descriptors[0]
+	describeHealthGauge := c.descriptors[1]
+	describePosXGauge := c.descriptors[2]
+	describePosYGauge := c.descriptors[3]
+	describePosZGauge := c.descriptors[4]
+	describeXpLevelGauge := c.descriptors[5]
 
 	data, err := c.sharedmem.SyncReadEntityFromSharedMem()
 	if err != nil {
@@ -124,7 +124,7 @@ func (c Collector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c Collector) Describe(ch chan<- *prometheus.Desc) {
-	for _, describe := range c.describes {
+	for _, describe := range c.descriptors {
 		ch <- describe
 	}
 }
