@@ -19,7 +19,7 @@ const (
 type PluginConfig struct {
 	MinecraftHostname string
 	SharedMem         sharedmem.SharedMem
-	Rcon              *rcon.Client
+	Rcon              rcon.RconClient
 	Logger            *logrus.Logger
 	Plugins           []PluginInterface
 }
@@ -58,13 +58,16 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 	var queue []interface{}
 
 	if !strings.HasPrefix(input.Messages[0], commandPrefix) {
+		// TODO: dont return nil
 		return nil
 	}
 	input.Messages[0] = strings.TrimLeft(input.Messages[0], commandPrefix)
 
-	pc.Logger.WithFields(logrus.Fields{
-		"source": *input.Source,
-	}).Debug(input.Messages)
+	if input.Source != nil {
+		pc.Logger.WithFields(logrus.Fields{
+			"source": *input.Source,
+		}).Debug(input.Messages)
+	}
 
 	for _, plugin := range pc.Plugins {
 		if input.Messages[0] == plugin.CommandName() {
