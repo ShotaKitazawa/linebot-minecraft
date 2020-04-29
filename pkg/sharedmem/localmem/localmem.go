@@ -30,14 +30,14 @@ func New(logger *logrus.Logger) (*SharedMem, error) {
 	return m, nil
 }
 
-func (m *SharedMem) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
+func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	mu.Lock()
 	result := m.sharedMemory
 	mu.Unlock()
 	if result == nil {
-		return nil, fmt.Errorf("no such data")
+		return domain.Entity{}, fmt.Errorf("no such data")
 	}
-	return result, nil
+	return *result, nil
 }
 
 func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {

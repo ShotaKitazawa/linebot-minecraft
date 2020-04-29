@@ -10,28 +10,36 @@ import (
 
 type PluginWhitelist struct {
 	SharedMem sharedmem.SharedMem
-	Rcon      *rcon.Client
+	Rcon      rcon.RconClient
 	Logger    *logrus.Logger
 }
 
 func (p PluginWhitelist) CommandName() string {
-	return `/whitelist`
+	return `whitelist`
 }
 
 func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
 
-	if len(input.Messages) == 1 {
+	if len(input.Messages) < 2 {
 		queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
 		return &botplug.MessageOutput{Queue: queue}
 	}
 	switch input.Messages[1] {
 	case `add`:
-		queue, _ = p.add(input.Messages[2:])
+		if len(input.Messages) < 3 {
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
+		} else {
+			queue = p.add(input.Messages[2:])
+		}
 	case `delete`:
-		queue, _ = p.delete(input.Messages[2:])
+		if len(input.Messages) < 3 {
+			queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
+		} else {
+			queue = p.delete(input.Messages[2:])
+		}
 	case `list`:
-		queue, _ = p.list()
+		queue = p.list()
 	default:
 		queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
 	}
@@ -39,7 +47,7 @@ func (p PluginWhitelist) ReceiveMessage(input *botplug.MessageInput) *botplug.Me
 	return &botplug.MessageOutput{Queue: queue}
 }
 
-func (p PluginWhitelist) add(users []string) ([]interface{}, error) {
+func (p PluginWhitelist) add(users []string) []interface{} {
 	var queue []interface{}
 	for _, username := range users {
 		if p.Rcon.WhitelistAdd(username) != nil {
@@ -48,10 +56,10 @@ func (p PluginWhitelist) add(users []string) ([]interface{}, error) {
 			queue = append(queue, i18n.T.Sprintf(i18n.MessageWhitelistAdd, username))
 		}
 	}
-	return queue, nil
+	return queue
 }
 
-func (p PluginWhitelist) delete(users []string) ([]interface{}, error) {
+func (p PluginWhitelist) delete(users []string) []interface{} {
 	var queue []interface{}
 	for _, username := range users {
 		if p.Rcon.WhitelistRemove(username) != nil {
@@ -60,10 +68,10 @@ func (p PluginWhitelist) delete(users []string) ([]interface{}, error) {
 			queue = append(queue, i18n.T.Sprintf(i18n.MessageWhitelistRemove, username))
 		}
 	}
-	return queue, nil
+	return queue
 }
 
-func (p PluginWhitelist) list() ([]interface{}, error) {
+func (p PluginWhitelist) list() []interface{} {
 	var queue []interface{}
 
 	// read data from SharedMem
@@ -71,7 +79,7 @@ func (p PluginWhitelist) list() ([]interface{}, error) {
 	if err != nil {
 		p.Logger.Error(err)
 		queue = append(queue, i18n.T.Sprintf(i18n.MessageError))
-		return nil, err
+		return queue
 	}
 
 	// whitelist にいるユーザを LINE に送信
@@ -79,10 +87,10 @@ func (p PluginWhitelist) list() ([]interface{}, error) {
 	for _, username := range data.WhitelistUsernames {
 		usernames = append(usernames, username)
 	}
-	if usernames == nil {
+	if len(usernames) == 0 {
 		queue = append(queue, i18n.T.Sprintf(i18n.MessageNoUserExists))
-		return queue, nil
+		return queue
 	}
 	queue = append(queue, usernames)
-	return queue, nil
+	return queue
 }

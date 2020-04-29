@@ -10,16 +10,21 @@ import (
 )
 
 type PluginTitle struct {
-	Rcon   *rcon.Client
+	Rcon   rcon.RconClient
 	Logger *logrus.Logger
 }
 
 func (p PluginTitle) CommandName() string {
-	return `/title`
+	return `title`
 }
 
 func (p PluginTitle) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
 	var queue []interface{}
+
+	if len(input.Messages) < 2 {
+		queue = append(queue, i18n.T.Sprintf(i18n.MessageInvalidArguments))
+		return &botplug.MessageOutput{Queue: queue}
+	}
 
 	// send RCON
 	destUsers, err := p.Rcon.Title(strings.Join(input.Messages[1:], " "))

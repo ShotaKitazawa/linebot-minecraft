@@ -17,7 +17,7 @@ steps:
 - name: unit-test
   image: golang:1.12.7
   commands:
-  - go test ./... -cover -race -count=1
+  - go test ./... -cover -count=1
 
 - name: build
   image: golang:1.12.7

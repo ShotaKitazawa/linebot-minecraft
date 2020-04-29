@@ -13,7 +13,7 @@ type PluginList struct {
 }
 
 func (p PluginList) CommandName() string {
-	return `/list`
+	return `list`
 }
 
 func (p PluginList) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {
