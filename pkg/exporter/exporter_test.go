@@ -14,25 +14,16 @@ import (
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
-const (
-	MockUserNameValue   = `test`
-	MockUserHealthValue = 20
-	MockUserXpValue     = 10
-	MockUserPosXValue   = 1
-	MockUserPosYValue   = 2
-	MockUserPosZValue   = 3
-)
-
 var (
 	loggerForTest = logrus.New()
 	userForTest   = domain.User{
-		Name:    MockUserNameValue,
-		Health:  MockUserHealthValue,
-		XpLevel: MockUserXpValue,
+		Name:    mock.MockUserNameValue,
+		Health:  mock.MockUserHealthValue,
+		XpLevel: mock.MockUserXpValue,
 		Position: domain.Position{
-			X: MockUserPosXValue,
-			Y: MockUserPosYValue,
-			Z: MockUserPosZValue,
+			X: mock.MockUserPosXValue,
+			Y: mock.MockUserPosYValue,
+			Z: mock.MockUserPosZValue,
 		},
 	}
 )
