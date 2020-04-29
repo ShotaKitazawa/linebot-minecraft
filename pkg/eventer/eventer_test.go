@@ -148,11 +148,11 @@ type sharedmemMockValid struct {
 	data *domain.Entity
 }
 
-func (m *sharedmemMockValid) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
+func (m *sharedmemMockValid) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	if m.data == nil {
-		return nil, errors.New(``)
+		return domain.Entity{}, errors.New(``)
 	}
-	return m.data, nil
+	return *m.data, nil
 }
 
 func (m *sharedmemMockValid) AsyncWriteEntityToSharedMem(data domain.Entity) error {
@@ -163,8 +163,8 @@ func (m *sharedmemMockValid) AsyncWriteEntityToSharedMem(data domain.Entity) err
 type sharedmemMockInvalid struct {
 }
 
-func (m *sharedmemMockInvalid) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
-	return nil, errors.New(``)
+func (m *sharedmemMockInvalid) SyncReadEntityFromSharedMem() (domain.Entity, error) {
+	return domain.Entity{}, errors.New(``)
 }
 
 func (m *sharedmemMockInvalid) AsyncWriteEntityToSharedMem(data domain.Entity) error {

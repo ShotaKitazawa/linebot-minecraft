@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 	"github.com/gomodule/redigo/redis"
 	"github.com/sirupsen/logrus"
+
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
 )
 
 type SharedMem struct {
@@ -35,24 +36,18 @@ func New(logger *logrus.Logger, addr string, port int) (*SharedMem, error) {
 	return m, nil
 }
 
-func (m *SharedMem) SyncReadEntityFromSharedMem() (*domain.Entity, error) {
+func (m *SharedMem) SyncReadEntityFromSharedMem() (domain.Entity, error) {
 	data, err := redis.Bytes(m.Conn.Do("GET", "entity"))
 	if err != nil {
-		m.logger.Warn(err)
-		if err := m.reconnect(); err != nil {
-			m.logger.Error(err)
-		} else {
-			m.logger.Info(`reconnect to Redis`)
-		}
-		return nil, err
-	} else if data == nil {
-		return nil, nil
+		m.logger.Error(err)
+		return domain.Entity{}, err
 	}
 	entity := domain.Entity{}
 	if err := json.Unmarshal(data, &entity); err != nil {
-		return nil, err
+		m.logger.Error(err)
+		return domain.Entity{}, err
 	}
-	return &entity, nil
+	return entity, nil
 }
 
 func (m *SharedMem) AsyncWriteEntityToSharedMem(data domain.Entity) error {
@@ -70,12 +65,7 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 			}
 			_, err = m.Conn.Do("SET", "entity", data)
 			if err != nil {
-				m.logger.Warn(err)
-				if err := m.reconnect(); err != nil {
-					m.logger.Error(err)
-				} else {
-					m.logger.Info(`reconnect to Redis`)
-				}
+				m.logger.Error(err)
 				return err
 			}
 		}
@@ -83,6 +73,7 @@ func (m *SharedMem) receiveFromChannelAndWriteSharedMem() error {
 	// return nil
 }
 
+/* TODO
 func (m *SharedMem) reconnect() error {
 	c, err := redis.Dial("tcp", m.redisHostname)
 	if err != nil {
@@ -91,3 +82,4 @@ func (m *SharedMem) reconnect() error {
 	m.Conn = c
 	return nil
 }
+*/
