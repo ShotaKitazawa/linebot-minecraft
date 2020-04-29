@@ -11,7 +11,7 @@ type PluginHelp struct {
 }
 
 func (p PluginHelp) CommandName() string {
-	return `/help`
+	return `help`
 }
 
 func (p PluginHelp) ReceiveMessage(input *botplug.MessageInput) *botplug.MessageOutput {

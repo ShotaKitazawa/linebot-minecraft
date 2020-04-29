@@ -30,7 +30,7 @@ func (r *RconClientMockValid) WhitelistRemove(username string) error {
 			}
 		}
 	}
-	if matched {
+	if !matched {
 		return errors.New(``)
 	}
 	return nil

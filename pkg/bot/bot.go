@@ -60,6 +60,7 @@ func (pc *PluginConfig) ReceiveMessageEntry(input *botplug.MessageInput) *botplu
 	if !strings.HasPrefix(input.Messages[0], commandPrefix) {
 		return nil
 	}
+	input.Messages[0] = strings.TrimLeft(input.Messages[0], commandPrefix)
 
 	pc.Logger.WithFields(logrus.Fields{
 		"source": *input.Source,
