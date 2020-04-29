@@ -1,7 +1,6 @@
 package exporter
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/domain"
+	"github.com/ShotaKitazawa/linebot-minecraft/pkg/mock"
 	"github.com/ShotaKitazawa/linebot-minecraft/pkg/sharedmem"
 )
 
@@ -71,7 +71,7 @@ func TestExporter(t *testing.T) {
 		t.Run(`Collect()`, func(t *testing.T) {
 
 			t.Run(`exist data in SharedMem (AllUsers:1,LoginUser:0)`, func(t *testing.T) {
-				c := NewCollectorForTest(&sharedmemMockValid{data: &domain.Entity{
+				c := NewCollectorForTest(&mock.SharedmemMockValid{Data: &domain.Entity{
 					AllUsers: []domain.User{userForTest},
 				}})
 				receiveChan, sendChan := NewStreamMetricForTest()
@@ -92,7 +92,7 @@ func TestExporter(t *testing.T) {
 			})
 
 			t.Run(`exist data in SharedMem (AllUsers:1,LoginUser:1)`, func(t *testing.T) {
-				c := NewCollectorForTest(&sharedmemMockValid{data: &domain.Entity{
+				c := NewCollectorForTest(&mock.SharedmemMockValid{Data: &domain.Entity{
 					AllUsers:   []domain.User{userForTest},
 					LoginUsers: []domain.User{userForTest},
 				}})
@@ -114,7 +114,7 @@ func TestExporter(t *testing.T) {
 				time.Sleep(time.Second)
 			})
 			t.Run(`no exist data in SharedMem`, func(t *testing.T) {
-				c := NewCollectorForTest(&sharedmemMockValid{})
+				c := NewCollectorForTest(&mock.SharedmemMockValid{})
 				receiveChan, sendChan := NewStreamMetricForTest()
 				c.Collect(receiveChan)
 
@@ -130,7 +130,7 @@ func TestExporter(t *testing.T) {
 		t.Run(`Describe()`, func(t *testing.T) {
 
 			t.Run(`exist data in SharedMem (AllUsers:1,LoginUser:1)`, func(t *testing.T) {
-				c := NewCollectorForTest(&sharedmemMockValid{data: &domain.Entity{
+				c := NewCollectorForTest(&mock.SharedmemMockValid{Data: &domain.Entity{
 					AllUsers:   []domain.User{userForTest},
 					LoginUsers: []domain.User{userForTest},
 				}})
@@ -156,7 +156,7 @@ func TestExporter(t *testing.T) {
 	})
 
 	t.Run(`abnormal`, func(t *testing.T) {
-		c := NewCollectorForTest(&sharedmemMockInvalid{})
+		c := NewCollectorForTest(&mock.SharedmemMockInvalid{})
 		receiveChan, sendChan := NewStreamMetricForTest()
 		c.Collect(receiveChan)
 
@@ -168,31 +168,4 @@ func TestExporter(t *testing.T) {
 		time.Sleep(time.Second)
 	})
 
-}
-
-type sharedmemMockValid struct {
-	data *domain.Entity
-}
-
-func (m *sharedmemMockValid) SyncReadEntityFromSharedMem() (domain.Entity, error) {
-	if m.data == nil {
-		return domain.Entity{}, errors.New(``)
-	}
-	return *m.data, nil
-}
-
-func (m *sharedmemMockValid) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	m.data = &data
-	return nil
-}
-
-type sharedmemMockInvalid struct {
-}
-
-func (m *sharedmemMockInvalid) SyncReadEntityFromSharedMem() (domain.Entity, error) {
-	return domain.Entity{}, errors.New(``)
-}
-
-func (m *sharedmemMockInvalid) AsyncWriteEntityToSharedMem(data domain.Entity) error {
-	return errors.New(``)
 }
